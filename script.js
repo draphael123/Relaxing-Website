@@ -10,7 +10,32 @@ const progressRing = document.querySelector('.progress-ring-circle');
 const sessionCount = document.getElementById('sessionCount');
 const breakType = document.getElementById('breakType');
 
-const ambientVolume = document.getElementById('ambientVolume');
+const audio = document.getElementById('backgroundMusic');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const playIcon = document.getElementById('playIcon');
+const volumeSlider = document.getElementById('volumeSlider');
+const playlistSelect = document.getElementById('playlistSelect');
+const trackName = document.getElementById('trackName');
+const uploadMusicBtn = document.getElementById('uploadMusicBtn');
+const manageMusicBtn = document.getElementById('manageMusicBtn');
+const youtubeSearchBtn = document.getElementById('youtubeSearchBtn');
+const musicFileInput = document.getElementById('musicFileInput');
+const musicUploadInput = document.getElementById('musicUploadInput');
+const musicUploadModal = document.getElementById('musicUploadModal');
+const manageMusicModal = document.getElementById('manageMusicModal');
+const youtubeSearchModal = document.getElementById('youtubeSearchModal');
+const closeMusicModal = document.getElementById('closeMusicModal');
+const closeManageModal = document.getElementById('closeManageModal');
+const closeYoutubeModal = document.getElementById('closeYoutubeModal');
+const uploadDropzone = document.getElementById('uploadDropzone');
+const uploadedFilesList = document.getElementById('uploadedFilesList');
+const myMusicList = document.getElementById('myMusicList');
+const youtubeSearchInput = document.getElementById('youtubeSearchInput');
+const youtubeSearchButton = document.getElementById('youtubeSearchButton');
+const youtubeResults = document.getElementById('youtubeResults');
+const youtubePlayerContainer = document.getElementById('youtubePlayerContainer');
+const youtubePlayer = document.getElementById('youtubePlayer');
+const youtubeVideoTitle = document.getElementById('youtubeVideoTitle');
 
 const quoteText = document.getElementById('quoteText');
 const quoteAuthor = document.getElementById('quoteAuthor');
@@ -100,69 +125,182 @@ const CHAT_STORAGE_KEY = 'fountain-chat-messages';
 const CHAT_API_URL = 'https://api.jsonbin.io/v3/b'; // Using JSONBin for shared storage
 const CHAT_BIN_ID = '675a123e1f5677401f3a1234'; // This will be created/updated
 let chatLastUpdate = 0;
+let lastMessageCount = 0;
+let lastMessageIds = new Set();
 
 
-// 50 Different Ambient Sounds
-const ambientSoundList = [
-    { id: 'rain', name: 'Rain', emoji: '🌧️', type: 'nature' },
-    { id: 'forest', name: 'Forest', emoji: '🌲', type: 'nature' },
-    { id: 'ocean', name: 'Ocean Waves', emoji: '🌊', type: 'nature' },
-    { id: 'fireplace', name: 'Fireplace', emoji: '🔥', type: 'indoor' },
-    { id: 'cafe', name: 'Coffee Shop', emoji: '☕', type: 'indoor' },
-    { id: 'thunder', name: 'Thunderstorm', emoji: '⚡', type: 'nature' },
-    { id: 'wind', name: 'Wind', emoji: '💨', type: 'nature' },
-    { id: 'birds', name: 'Birds Chirping', emoji: '🐦', type: 'nature' },
-    { id: 'crickets', name: 'Crickets', emoji: '🦗', type: 'nature' },
-    { id: 'waterfall', name: 'Waterfall', emoji: '🏞️', type: 'nature' },
-    { id: 'river', name: 'Flowing River', emoji: '🌊', type: 'nature' },
-    { id: 'beach', name: 'Beach', emoji: '🏖️', type: 'nature' },
-    { id: 'jungle', name: 'Jungle', emoji: '🌴', type: 'nature' },
-    { id: 'snow', name: 'Snowfall', emoji: '❄️', type: 'nature' },
-    { id: 'desert', name: 'Desert Wind', emoji: '🏜️', type: 'nature' },
-    { id: 'library', name: 'Library', emoji: '📚', type: 'indoor' },
-    { id: 'train', name: 'Train', emoji: '🚂', type: 'urban' },
-    { id: 'city', name: 'City Ambience', emoji: '🏙️', type: 'urban' },
-    { id: 'subway', name: 'Subway', emoji: '🚇', type: 'urban' },
-    { id: 'airport', name: 'Airport', emoji: '✈️', type: 'urban' },
-    { id: 'fan', name: 'Fan', emoji: '🌀', type: 'indoor' },
-    { id: 'white-noise', name: 'White Noise', emoji: '📻', type: 'indoor' },
-    { id: 'pink-noise', name: 'Pink Noise', emoji: '🎵', type: 'indoor' },
-    { id: 'brown-noise', name: 'Brown Noise', emoji: '🔊', type: 'indoor' },
-    { id: 'wind-chimes', name: 'Wind Chimes', emoji: '🎐', type: 'nature' },
-    { id: 'tibetan-bowls', name: 'Tibetan Bowls', emoji: '🔔', type: 'meditation' },
-    { id: 'singing-bowl', name: 'Singing Bowl', emoji: '🎶', type: 'meditation' },
-    { id: 'gong', name: 'Gong', emoji: '🥁', type: 'meditation' },
-    { id: 'bells', name: 'Bells', emoji: '🔔', type: 'meditation' },
-    { id: 'zen-garden', name: 'Zen Garden', emoji: '🧘', type: 'meditation' },
-    { id: 'temple', name: 'Temple', emoji: '🛕', type: 'meditation' },
-    { id: 'monastery', name: 'Monastery', emoji: '⛪', type: 'meditation' },
-    { id: 'cathedral', name: 'Cathedral', emoji: '⛪', type: 'meditation' },
-    { id: 'wind-tunnel', name: 'Wind Tunnel', emoji: '🌪️', type: 'nature' },
-    { id: 'underwater', name: 'Underwater', emoji: '🐠', type: 'nature' },
-    { id: 'cave', name: 'Cave', emoji: '🕳️', type: 'nature' },
-    { id: 'mountain', name: 'Mountain', emoji: '⛰️', type: 'nature' },
-    { id: 'meadow', name: 'Meadow', emoji: '🌾', type: 'nature' },
-    { id: 'farm', name: 'Farm', emoji: '🚜', type: 'nature' },
-    { id: 'night', name: 'Night Sounds', emoji: '🌙', type: 'nature' },
-    { id: 'morning', name: 'Morning', emoji: '🌅', type: 'nature' },
-    { id: 'evening', name: 'Evening', emoji: '🌆', type: 'nature' },
-    { id: 'winter', name: 'Winter', emoji: '❄️', type: 'nature' },
-    { id: 'summer', name: 'Summer', emoji: '☀️', type: 'nature' },
-    { id: 'autumn', name: 'Autumn', emoji: '🍂', type: 'nature' },
-    { id: 'spring', name: 'Spring', emoji: '🌸', type: 'nature' },
-    { id: 'space', name: 'Space', emoji: '🌌', type: 'ambient' },
-    { id: 'cosmic', name: 'Cosmic', emoji: '✨', type: 'ambient' },
-    { id: 'etheral', name: 'Ethereal', emoji: '🌟', type: 'ambient' },
-    { id: 'dreamy', name: 'Dreamy', emoji: '💫', type: 'ambient' }
-];
+// Music playlists - Add your own music URLs here
+// Free music sources: freemusicarchive.org, incompetech.com, bensound.com
+// For best results, host your music files and use those URLs
+const playlists = {
+    lofi: {
+        name: 'Lo-Fi Hip Hop',
+        tracks: [
+            // Add your music URLs here, e.g.:
+            // 'https://your-domain.com/music/lofi1.mp3',
+            // 'https://your-domain.com/music/lofi2.mp3'
+        ]
+    },
+    classical: {
+        name: 'Classical',
+        tracks: [
+            // Add your music URLs here
+        ]
+    },
+    jazz: {
+        name: 'Jazz',
+        tracks: [
+            // Add your music URLs here
+        ]
+    },
+    ambient: {
+        name: 'Ambient',
+        tracks: [
+            // Add your music URLs here
+        ]
+    },
+    piano: {
+        name: 'Piano',
+        tracks: [
+            // Add your music URLs here
+        ]
+    },
+    nature: {
+        name: 'Nature Sounds',
+        tracks: []
+    },
+    custom: {
+        name: 'My Music',
+        tracks: []
+    }
+};
 
-// Ambient sound generators using Web Audio API
-let ambientAudioContext = null;
-let ambientOscillators = [];
-let ambientGainNodes = [];
-let activeAmbientSound = null;
-const soundOptions = document.getElementById('soundOptions');
-const ambientSearch = document.getElementById('ambientSearch');
+let currentTrackIndex = 0;
+
+// YouTube player variables
+let youtubePlayerInstance = null;
+let currentYoutubeVideoId = null;
+
+// User uploaded music storage
+const USER_MUSIC_KEY = 'fountain-user-music';
+let userMusic = [];
+
+// Load user uploaded music
+function loadUserMusic() {
+    try {
+        const stored = localStorage.getItem(USER_MUSIC_KEY);
+        if (stored) {
+            userMusic = JSON.parse(stored);
+            // Update custom playlist with user music
+            if (!playlists.custom) {
+                playlists.custom = { name: 'My Music', tracks: [] };
+            }
+            playlists.custom.tracks = userMusic.map(m => m.url);
+            updateMyMusicList();
+        }
+    } catch (e) {
+        console.error('Error loading user music:', e);
+        userMusic = [];
+    }
+}
+
+// Save user uploaded music
+function saveUserMusic() {
+    try {
+        localStorage.setItem(USER_MUSIC_KEY, JSON.stringify(userMusic));
+        if (playlists.custom) {
+            playlists.custom.tracks = userMusic.map(m => m.url);
+        }
+    } catch (e) {
+        console.error('Error saving user music:', e);
+        showNotification('Error saving music. Storage may be full.', 3000);
+    }
+}
+
+// Update my music list display
+function updateMyMusicList() {
+    if (!myMusicList) return;
+    
+    myMusicList.innerHTML = '';
+    
+    if (userMusic.length === 0) {
+        myMusicList.innerHTML = '<p class="no-music-message">No music uploaded yet. Click "Upload Music" to add your tracks!</p>';
+        return;
+    }
+    
+    userMusic.forEach((music, index) => {
+        const musicItem = document.createElement('div');
+        musicItem.className = 'music-item';
+        musicItem.innerHTML = `
+            <div class="music-item-info">
+                <span class="music-item-name">${music.name}</span>
+                <span class="music-item-size">${formatFileSize(music.size)}</span>
+            </div>
+            <div class="music-item-actions">
+                <button class="play-music-btn" data-index="${index}" title="Play">▶</button>
+                <button class="delete-music-btn" data-index="${index}" title="Delete">🗑️</button>
+            </div>
+        `;
+        myMusicList.appendChild(musicItem);
+    });
+    
+    // Add event listeners
+    myMusicList.querySelectorAll('.play-music-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            playUserMusic(index);
+        });
+    });
+    
+    myMusicList.querySelectorAll('.delete-music-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            deleteUserMusic(index);
+        });
+    });
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function playUserMusic(index) {
+    if (userMusic[index] && audio) {
+        audio.src = userMusic[index].url;
+        audio.load();
+        audio.play().catch(() => {});
+        if (playlistSelect) playlistSelect.value = 'custom';
+        if (trackName) trackName.textContent = userMusic[index].name;
+    }
+}
+
+function deleteUserMusic(index) {
+    const musicToDelete = userMusic[index];
+    if (!musicToDelete) return;
+    
+    if (confirm(`Delete "${musicToDelete.name}"?`)) {
+        // If currently playing this track, stop
+        if (audio && audio.src === musicToDelete.url) {
+            audio.pause();
+            audio.src = '';
+            if (playIcon) playIcon.textContent = '▶';
+        }
+        
+        // Revoke object URL to free memory
+        if (musicToDelete.url && musicToDelete.url.startsWith('blob:')) {
+            URL.revokeObjectURL(musicToDelete.url);
+        }
+        
+        userMusic.splice(index, 1);
+        saveUserMusic();
+        updateMyMusicList();
+        showNotification('Music deleted', 2000);
+    }
+}
 
 // Motivational quotes
 const motivationalQuotes = [
@@ -202,7 +340,15 @@ function init() {
     incrementTotalVisitors();
     sendHeartbeat();
     loadActiveUsers();
-    initAmbientSounds();
+    // Load user uploaded music
+    loadUserMusic();
+    
+    // Load default playlist
+    if (audio && playlistSelect) {
+        loadPlaylist('lofi');
+        audio.volume = 0.5;
+        if (volumeSlider) volumeSlider.value = 50;
+    }
     
     // Set intervals
     setInterval(sendHeartbeat, 30000);
@@ -217,360 +363,114 @@ function init() {
     }, 30000);
 }
 
-// ==================== AMBIENT SOUNDS ====================
-
-// Initialize ambient sounds UI
-function initAmbientSounds() {
-    if (!soundOptions) return;
+// ==================== MUSIC CONTROLS ====================
+function loadPlaylist(playlistKey) {
+    const playlist = playlists[playlistKey];
+    if (!playlist || !audio) return;
     
-    // Create buttons for all ambient sounds
-    ambientSoundList.forEach(sound => {
-        const btn = document.createElement('button');
-        btn.className = 'sound-btn';
-        btn.dataset.sound = sound.id;
-        btn.dataset.type = sound.type;
-        btn.dataset.name = sound.name.toLowerCase();
-        btn.innerHTML = `${sound.emoji} ${sound.name}`;
-        btn.addEventListener('click', () => toggleAmbientSound(sound.id, btn));
-        soundOptions.appendChild(btn);
+    // If custom playlist and no tracks, show message
+    if (playlistKey === 'custom' && (!playlist.tracks || playlist.tracks.length === 0)) {
+        if (trackName) trackName.textContent = 'No music uploaded yet. Click "Upload Music" to add tracks!';
+        audio.src = '';
+        if (playIcon) playIcon.textContent = '▶';
+        return;
+    }
+    
+    if (!playlist.tracks || playlist.tracks.length === 0) {
+        if (trackName) trackName.textContent = playlist.name + ' (No tracks available)';
+        audio.src = '';
+        if (playIcon) playIcon.textContent = '▶';
+        return;
+    }
+    
+    currentTrackIndex = 0;
+    if (trackName) trackName.textContent = playlist.name;
+    const trackUrl = playlist.tracks[currentTrackIndex];
+    
+    audio.src = trackUrl;
+    audio.load();
+    
+    // Try to play automatically
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                if (playIcon) playIcon.textContent = '⏸';
+            })
+            .catch(() => {
+                if (playIcon) playIcon.textContent = '▶';
+            });
+    }
+}
+
+// Play next track when current ends
+if (audio) {
+    audio.addEventListener('ended', () => {
+        const currentPlaylist = playlistSelect ? playlistSelect.value : 'lofi';
+        const playlist = playlists[currentPlaylist];
+        if (playlist && playlist.tracks.length > 0) {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.tracks.length;
+            audio.src = playlist.tracks[currentTrackIndex];
+            audio.load();
+            audio.play().catch(() => {});
+        }
     });
 }
 
-function toggleAmbientSound(soundId, buttonElement) {
-    // Toggle sound
-    if (buttonElement.classList.contains('active')) {
-        // Stop current sound
-        stopAmbientSound();
-        buttonElement.classList.remove('active');
-    } else {
-        // Stop any currently playing sound
-        document.querySelectorAll('.sound-btn.active').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        stopAmbientSound();
+// Playlist selection
+if (playlistSelect) {
+    playlistSelect.addEventListener('change', (e) => {
+        const wasPlaying = !audio.paused;
+        loadPlaylist(e.target.value);
+        if (wasPlaying) {
+            setTimeout(() => {
+                audio.play().catch(() => {});
+            }, 100);
+        }
+    });
+}
+
+// Play/Pause button
+if (playPauseBtn) {
+    playPauseBtn.addEventListener('click', () => {
+        if (!audio.src) {
+            loadPlaylist(playlistSelect ? playlistSelect.value : 'lofi');
+            return;
+        }
         
-        // Start new sound
-        startAmbientSound(soundId);
-        buttonElement.classList.add('active');
-    }
-}
-
-function stopAmbientSound() {
-    // Stop all oscillators
-    ambientOscillators.forEach(osc => {
-        try {
-            osc.stop();
-            osc.disconnect();
-        } catch (e) {}
-    });
-    ambientOscillators = [];
-    ambientGainNodes = [];
-    activeAmbientSound = null;
-}
-
-function startAmbientSound(soundId) {
-    // Initialize audio context if needed
-    if (!ambientAudioContext) {
-        ambientAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    
-    // Resume context if suspended
-    if (ambientAudioContext.state === 'suspended') {
-        ambientAudioContext.resume();
-    }
-    
-    const volume = ambientVolume ? ambientVolume.value / 100 : 0.3;
-    
-    // Generate different sounds based on type
-    const sound = ambientSoundList.find(s => s.id === soundId);
-    if (!sound) return;
-    
-    stopAmbientSound(); // Clear any existing sounds
-    
-    switch(sound.type) {
-        case 'nature':
-            generateNatureSound(soundId, volume);
-            break;
-        case 'indoor':
-            generateIndoorSound(soundId, volume);
-            break;
-        case 'urban':
-            generateUrbanSound(soundId, volume);
-            break;
-        case 'meditation':
-            generateMeditationSound(soundId, volume);
-            break;
-        case 'ambient':
-            generateAmbientSound(soundId, volume);
-            break;
-        default:
-            generateWhiteNoise(volume);
-    }
-    
-    activeAmbientSound = soundId;
-}
-
-function generateNatureSound(soundId, volume) {
-    const gainNode = ambientAudioContext.createGain();
-    gainNode.gain.value = volume;
-    gainNode.connect(ambientAudioContext.destination);
-    ambientGainNodes.push(gainNode);
-    
-    if (soundId === 'rain' || soundId === 'snow') {
-        // Rain/snow: multiple oscillators with noise
-        for (let i = 0; i < 5; i++) {
-            const osc = ambientAudioContext.createOscillator();
-            const gain = ambientAudioContext.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.value = 100 + Math.random() * 200;
-            gain.gain.value = 0.1 * volume;
-            osc.connect(gain);
-            gain.connect(gainNode);
-            osc.start();
-            ambientOscillators.push(osc);
-        }
-    } else if (soundId === 'wind' || soundId === 'wind-tunnel' || soundId === 'desert') {
-        // Wind: low frequency noise
-        const osc = ambientAudioContext.createOscillator();
-        osc.type = 'sawtooth';
-        osc.frequency.value = 20 + Math.random() * 30;
-        osc.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    } else if (soundId === 'ocean' || soundId === 'beach' || soundId === 'waterfall' || soundId === 'river') {
-        // Water: multiple frequencies
-        for (let i = 0; i < 3; i++) {
-            const osc = ambientAudioContext.createOscillator();
-            const gain = ambientAudioContext.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 200 + i * 100 + Math.random() * 50;
-            gain.gain.value = 0.15 * volume;
-            osc.connect(gain);
-            gain.connect(gainNode);
-            osc.start();
-            ambientOscillators.push(osc);
-        }
-    } else if (soundId === 'birds' || soundId === 'crickets' || soundId === 'night' || soundId === 'morning' || soundId === 'evening') {
-        // Birds/Crickets/Night: high frequency chirps
-        for (let i = 0; i < 3; i++) {
-            const osc = ambientAudioContext.createOscillator();
-            const gain = ambientAudioContext.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 1000 + Math.random() * 2000;
-            gain.gain.value = 0.1 * volume;
-            osc.connect(gain);
-            gain.connect(gainNode);
-            osc.start();
-            ambientOscillators.push(osc);
-        }
-    } else if (soundId === 'thunder') {
-        // Thunder: occasional low frequency bursts
-        const osc = ambientAudioContext.createOscillator();
-        osc.type = 'square';
-        osc.frequency.value = 30 + Math.random() * 20;
-        osc.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    } else if (soundId === 'wind-chimes') {
-        // Wind chimes: high frequency bell-like sounds
-        for (let i = 0; i < 4; i++) {
-            const osc = ambientAudioContext.createOscillator();
-            const gain = ambientAudioContext.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 800 + i * 200;
-            gain.gain.value = 0.12 * volume;
-            osc.connect(gain);
-            gain.connect(gainNode);
-            osc.start();
-            ambientOscillators.push(osc);
-        }
-    } else if (soundId === 'underwater') {
-        // Underwater: muffled low frequencies
-        const osc = ambientAudioContext.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = 50 + Math.random() * 30;
-        osc.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    } else if (soundId === 'cave') {
-        // Cave: echo-like low frequencies
-        const osc = ambientAudioContext.createOscillator();
-        osc.type = 'sawtooth';
-        osc.frequency.value = 40 + Math.random() * 20;
-        osc.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    } else if (soundId === 'winter' || soundId === 'summer' || soundId === 'autumn' || soundId === 'spring') {
-        // Seasons: mix of nature sounds
-        for (let i = 0; i < 2; i++) {
-            const osc = ambientAudioContext.createOscillator();
-            const gain = ambientAudioContext.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 150 + i * 100 + Math.random() * 50;
-            gain.gain.value = 0.15 * volume;
-            osc.connect(gain);
-            gain.connect(gainNode);
-            osc.start();
-            ambientOscillators.push(osc);
-        }
-    } else {
-        // Default nature sound
-        generateWhiteNoise(volume);
-    }
-}
-
-function generateIndoorSound(soundId, volume) {
-    const gainNode = ambientAudioContext.createGain();
-    gainNode.gain.value = volume;
-    gainNode.connect(ambientAudioContext.destination);
-    ambientGainNodes.push(gainNode);
-    
-    if (soundId === 'white-noise' || soundId === 'pink-noise' || soundId === 'brown-noise') {
-        generateWhiteNoise(volume);
-    } else if (soundId === 'fan') {
-        // Fan: low constant frequency
-        const osc = ambientAudioContext.createOscillator();
-        osc.type = 'sawtooth';
-        osc.frequency.value = 60;
-        osc.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    } else if (soundId === 'fireplace') {
-        // Fireplace: crackling low frequencies
-        for (let i = 0; i < 3; i++) {
-            const osc = ambientAudioContext.createOscillator();
-            const gain = ambientAudioContext.createGain();
-            osc.type = 'square';
-            osc.frequency.value = 80 + i * 40 + Math.random() * 20;
-            gain.gain.value = 0.12 * volume;
-            osc.connect(gain);
-            gain.connect(gainNode);
-            osc.start();
-            ambientOscillators.push(osc);
-        }
-    } else if (soundId === 'cafe' || soundId === 'library') {
-        // Cafe/Library: subtle background noise
-        generateWhiteNoise(volume * 0.5);
-    } else {
-        // Default indoor: white noise
-        generateWhiteNoise(volume);
-    }
-}
-
-function generateUrbanSound(soundId, volume) {
-    const gainNode = ambientAudioContext.createGain();
-    gainNode.gain.value = volume;
-    gainNode.connect(ambientAudioContext.destination);
-    ambientGainNodes.push(gainNode);
-    
-    // Urban sounds: mix of frequencies
-    for (let i = 0; i < 4; i++) {
-        const osc = ambientAudioContext.createOscillator();
-        const gain = ambientAudioContext.createGain();
-        osc.type = 'square';
-        osc.frequency.value = 100 + i * 150 + Math.random() * 100;
-        gain.gain.value = 0.1 * volume;
-        osc.connect(gain);
-        gain.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    }
-}
-
-function generateMeditationSound(soundId, volume) {
-    const gainNode = ambientAudioContext.createGain();
-    gainNode.gain.value = volume;
-    gainNode.connect(ambientAudioContext.destination);
-    ambientGainNodes.push(gainNode);
-    
-    if (soundId === 'tibetan-bowls' || soundId === 'singing-bowl' || soundId === 'gong' || soundId === 'bells') {
-        // Bowl sounds: harmonic frequencies
-        for (let i = 0; i < 3; i++) {
-            const osc = ambientAudioContext.createOscillator();
-            const gain = ambientAudioContext.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 200 + i * 150;
-            gain.gain.value = 0.15 * volume;
-            osc.connect(gain);
-            gain.connect(gainNode);
-            osc.start();
-            ambientOscillators.push(osc);
-        }
-    } else {
-        // Default meditation: slow, calming frequencies
-        const osc = ambientAudioContext.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = 60 + Math.random() * 40;
-        osc.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    }
-}
-
-function generateAmbientSound(soundId, volume) {
-    const gainNode = ambientAudioContext.createGain();
-    gainNode.gain.value = volume;
-    gainNode.connect(ambientAudioContext.destination);
-    ambientGainNodes.push(gainNode);
-    
-    // Ambient: ethereal frequencies
-    for (let i = 0; i < 3; i++) {
-        const osc = ambientAudioContext.createOscillator();
-        const gain = ambientAudioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = 200 + i * 100;
-        gain.gain.value = 0.15 * volume;
-        osc.connect(gain);
-        gain.connect(gainNode);
-        osc.start();
-        ambientOscillators.push(osc);
-    }
-}
-
-function generateWhiteNoise(volume) {
-    const bufferSize = 4096;
-    const buffer = ambientAudioContext.createBuffer(1, bufferSize, ambientAudioContext.sampleRate);
-    const data = buffer.getChannelData(0);
-    
-    for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-    }
-    
-    const whiteNoise = ambientAudioContext.createBufferSource();
-    const gainNode = ambientAudioContext.createGain();
-    whiteNoise.buffer = buffer;
-    whiteNoise.loop = true;
-    gainNode.gain.value = volume * 0.3;
-    whiteNoise.connect(gainNode);
-    gainNode.connect(ambientAudioContext.destination);
-    whiteNoise.start();
-    ambientOscillators.push(whiteNoise);
-    ambientGainNodes.push(gainNode);
-}
-
-// Search functionality for ambient sounds
-if (ambientSearch) {
-    ambientSearch.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        document.querySelectorAll('.sound-btn').forEach(btn => {
-            const name = btn.dataset.name || '';
-            const type = btn.dataset.type || '';
-            if (name.includes(searchTerm) || type.includes(searchTerm) || searchTerm === '') {
-                btn.style.display = '';
-            } else {
-                btn.style.display = 'none';
+        if (audio.paused) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        if (playIcon) playIcon.textContent = '⏸';
+                    })
+                    .catch(error => {
+                        console.error('Playback failed:', error);
+                        showNotification('Unable to play music. Please check your browser settings.', 3000);
+                    });
             }
-        });
+        } else {
+            audio.pause();
+            if (playIcon) playIcon.textContent = '▶';
+        }
     });
 }
 
-if (ambientVolume) {
-    ambientVolume.addEventListener('input', (e) => {
-        const volume = e.target.value / 100;
-        // Update all gain nodes
-        ambientGainNodes.forEach(gain => {
-            gain.gain.value = volume;
-        });
+// Volume control
+if (volumeSlider) {
+    volumeSlider.addEventListener('input', (e) => {
+        if (audio) audio.volume = e.target.value / 100;
+    });
+}
+
+// Update play icon when audio state changes
+if (audio) {
+    audio.addEventListener('play', () => {
+        if (playIcon) playIcon.textContent = '⏸';
+    });
+    audio.addEventListener('pause', () => {
+        if (playIcon) playIcon.textContent = '▶';
     });
 }
 
@@ -1257,11 +1157,11 @@ function initChat() {
         };
     }
     
-    // Update chat every 2 seconds for better real-time feel
+    // Update chat every 5 seconds (reduced frequency to prevent flashing)
     chatUpdateInterval = setInterval(() => {
-        loadChatMessages();
+        loadChatMessages(true); // Pass true to indicate it's a background update
         updateChatUserCount();
-    }, 2000);
+    }, 5000);
 }
 
 function updateUsernameDisplay() {
@@ -1334,7 +1234,7 @@ function saveUsername() {
     showNotification('Username updated!', 2000);
 }
 
-async function loadChatMessages() {
+async function loadChatMessages(isBackgroundUpdate = false) {
     try {
         // Try to load from shared storage first
         const sharedMessages = await loadSharedChatMessages();
@@ -1353,6 +1253,26 @@ async function loadChatMessages() {
         const localMessages = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
         chatMessagesData = localMessages;
     }
+    
+    // Check if messages have actually changed
+    const currentMessageCount = chatMessagesData.length;
+    const currentMessageIds = new Set(chatMessagesData.map(msg => msg.id));
+    
+    // Only update if messages have changed
+    if (isBackgroundUpdate && currentMessageCount === lastMessageCount && 
+        currentMessageIds.size === lastMessageIds.size &&
+        [...currentMessageIds].every(id => lastMessageIds.has(id))) {
+        // No changes, skip update to prevent flashing
+        return;
+    }
+    
+    // Update tracking
+    lastMessageCount = currentMessageCount;
+    lastMessageIds = currentMessageIds;
+    
+    // Store scroll position before update
+    const wasAtBottom = chatMessages.scrollHeight - chatMessages.scrollTop <= chatMessages.clientHeight + 50;
+    const oldScrollHeight = chatMessages.scrollHeight;
     
     // Remove all existing elements
     chatMessages.innerHTML = '';
@@ -1375,7 +1295,14 @@ async function loadChatMessages() {
         displayChatMessage(msg);
     });
     
-    scrollChatToBottom();
+    // Restore scroll position if user wasn't at bottom, otherwise scroll to bottom
+    if (wasAtBottom) {
+        scrollChatToBottom();
+    } else {
+        const newScrollHeight = chatMessages.scrollHeight;
+        const scrollDifference = newScrollHeight - oldScrollHeight;
+        chatMessages.scrollTop += scrollDifference;
+    }
 }
 
 async function loadSharedChatMessages() {
@@ -1721,8 +1648,356 @@ function clearImagePreview() {
     if (chatFileInput) chatFileInput.value = '';
 }
 
+// ==================== MUSIC UPLOAD ====================
+if (uploadMusicBtn) {
+    uploadMusicBtn.addEventListener('click', () => {
+        if (musicUploadModal) musicUploadModal.classList.add('active');
+    });
+}
+
+if (manageMusicBtn) {
+    manageMusicBtn.addEventListener('click', () => {
+        updateMyMusicList();
+        if (manageMusicModal) manageMusicModal.classList.add('active');
+    });
+}
+
+if (closeMusicModal) {
+    closeMusicModal.addEventListener('click', () => {
+        if (musicUploadModal) musicUploadModal.classList.remove('active');
+    });
+}
+
+if (closeManageModal) {
+    closeManageModal.addEventListener('click', () => {
+        if (manageMusicModal) manageMusicModal.classList.remove('active');
+    });
+}
+
+// Close modals when clicking outside
+if (musicUploadModal) {
+    musicUploadModal.addEventListener('click', (e) => {
+        if (e.target === musicUploadModal) {
+            musicUploadModal.classList.remove('active');
+        }
+    });
+}
+
+if (manageMusicModal) {
+    manageMusicModal.addEventListener('click', (e) => {
+        if (e.target === manageMusicModal) {
+            manageMusicModal.classList.remove('active');
+        }
+    });
+}
+
+// File upload handling
+if (musicUploadInput) {
+    musicUploadInput.addEventListener('change', handleMusicUpload);
+}
+
+// Drag and drop
+if (uploadDropzone) {
+    uploadDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadDropzone.classList.add('drag-over');
+    });
+    
+    uploadDropzone.addEventListener('dragleave', () => {
+        uploadDropzone.classList.remove('drag-over');
+    });
+    
+    uploadDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadDropzone.classList.remove('drag-over');
+        const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('audio/'));
+        if (files.length > 0) {
+            processMusicFiles(files);
+        }
+    });
+}
+
+function handleMusicUpload(e) {
+    const files = Array.from(e.target.files).filter(file => file.type.startsWith('audio/'));
+    if (files.length > 0) {
+        processMusicFiles(files);
+    }
+    e.target.value = ''; // Reset input
+}
+
+function processMusicFiles(files) {
+    if (!uploadedFilesList) return;
+    
+    uploadedFilesList.innerHTML = '';
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    
+    files.forEach((file, index) => {
+        if (file.size > maxSize) {
+            showNotification(`${file.name} is too large (max 10MB)`, 3000);
+            return;
+        }
+        
+        const fileItem = document.createElement('div');
+        fileItem.className = 'upload-file-item';
+        fileItem.innerHTML = `
+            <span class="upload-file-name">${file.name}</span>
+            <span class="upload-file-status">Processing...</span>
+        `;
+        uploadedFilesList.appendChild(fileItem);
+        
+        // Create blob URL for immediate playback
+        const blobUrl = URL.createObjectURL(file);
+        
+        const musicData = {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: blobUrl,
+            uploadedAt: Date.now()
+        };
+        
+        userMusic.push(musicData);
+        saveUserMusic();
+        
+        fileItem.querySelector('.upload-file-status').textContent = '✓ Uploaded';
+        fileItem.classList.add('uploaded');
+        
+        showNotification(`${file.name} uploaded successfully!`, 2000);
+        updateMyMusicList();
+    });
+}
+
+// ==================== YOUTUBE INTEGRATION ====================
+if (youtubeSearchBtn) {
+    youtubeSearchBtn.addEventListener('click', () => {
+        if (youtubeSearchModal) youtubeSearchModal.classList.add('active');
+        if (youtubeSearchInput) {
+            setTimeout(() => youtubeSearchInput.focus(), 100);
+        }
+    });
+}
+
+if (closeYoutubeModal) {
+    closeYoutubeModal.addEventListener('click', () => {
+        if (youtubeSearchModal) youtubeSearchModal.classList.remove('active');
+        // Stop YouTube player when closing
+        if (youtubePlayerInstance) {
+            youtubePlayerInstance.stopVideo();
+        }
+    });
+}
+
+if (youtubeSearchModal) {
+    youtubeSearchModal.addEventListener('click', (e) => {
+        if (e.target === youtubeSearchModal) {
+            youtubeSearchModal.classList.remove('active');
+            if (youtubePlayerInstance) {
+                youtubePlayerInstance.stopVideo();
+            }
+        }
+    });
+}
+
+// YouTube search functionality
+if (youtubeSearchButton) {
+    youtubeSearchButton.addEventListener('click', () => {
+        performYouTubeSearch();
+    });
+}
+
+if (youtubeSearchInput) {
+    youtubeSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performYouTubeSearch();
+        }
+    });
+}
+
+// Initialize YouTube API
+let youtubeAPIReady = false;
+function onYouTubeIframeAPIReady() {
+    youtubeAPIReady = true;
+}
+
+// Fallback if API loads before our code
+if (typeof YT !== 'undefined' && YT.Player) {
+    youtubeAPIReady = true;
+}
+
+function performYouTubeSearch() {
+    const query = youtubeSearchInput ? youtubeSearchInput.value.trim() : '';
+    if (!query) {
+        showNotification('Please enter a search term', 2000);
+        return;
+    }
+    
+    if (!youtubeResults) return;
+    
+    youtubeResults.innerHTML = '<p class="searching">Searching...</p>';
+    
+    // Since we can't directly search without API key, we'll create a search interface
+    // that allows users to paste YouTube video URLs or use a search helper
+    showYouTubeSearchHelper(query);
+}
+
+function showYouTubeSearchHelper(query) {
+    if (!youtubeResults) return;
+    
+    youtubeResults.innerHTML = `
+        <div class="youtube-search-helper">
+            <p><strong>Search YouTube for:</strong> "${query}"</p>
+            <p class="youtube-instructions">
+                <strong>Option 1:</strong> Go to <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(query)}" target="_blank">YouTube</a> and copy a video URL, then paste it below.
+            </p>
+            <div class="youtube-url-input">
+                <input type="text" id="youtubeUrlInput" placeholder="Paste YouTube video URL here (e.g., https://www.youtube.com/watch?v=...)" class="youtube-url-field">
+                <button id="loadYoutubeUrlBtn" class="load-youtube-btn">Load Video</button>
+            </div>
+            <p class="youtube-note">💡 Tip: Search on YouTube, then paste the video URL here to play the audio.</p>
+        </div>
+    `;
+    
+    const urlInput = document.getElementById('youtubeUrlInput');
+    const loadBtn = document.getElementById('loadYoutubeUrlBtn');
+    
+    if (loadBtn) {
+        loadBtn.addEventListener('click', () => {
+            const url = urlInput ? urlInput.value.trim() : '';
+            if (url) {
+                loadYouTubeVideo(url);
+            }
+        });
+    }
+    
+    if (urlInput) {
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const url = urlInput.value.trim();
+                if (url) {
+                    loadYouTubeVideo(url);
+                }
+            }
+        });
+    }
+}
+
+function loadYouTubeVideo(url) {
+    // Extract video ID from various YouTube URL formats
+    let videoId = null;
+    
+    // Standard format: https://www.youtube.com/watch?v=VIDEO_ID
+    const match1 = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    if (match1) {
+        videoId = match1[1];
+    }
+    
+    // Short format: https://youtu.be/VIDEO_ID
+    if (!videoId) {
+        const match2 = url.match(/youtu\.be\/([^&\n?#]+)/);
+        if (match2) {
+            videoId = match2[1];
+        }
+    }
+    
+    // Embed format: https://www.youtube.com/embed/VIDEO_ID
+    if (!videoId) {
+        const match3 = url.match(/youtube\.com\/embed\/([^&\n?#]+)/);
+        if (match3) {
+            videoId = match3[1];
+        }
+    }
+    
+    if (!videoId) {
+        showNotification('Invalid YouTube URL. Please paste a valid YouTube video URL.', 3000);
+        return;
+    }
+    
+    playYouTubeVideo(videoId);
+}
+
+function playYouTubeVideo(videoId) {
+    if (!youtubePlayer) return;
+    
+    // Hide results, show player
+    if (youtubeResults) youtubeResults.style.display = 'none';
+    if (youtubePlayerContainer) youtubePlayerContainer.style.display = 'block';
+    
+    // Wait for YouTube API to be ready
+    const initPlayer = () => {
+        if (typeof YT === 'undefined' || !YT.Player) {
+            setTimeout(initPlayer, 100);
+            return;
+        }
+        
+        // Initialize or update YouTube player
+        if (!youtubePlayerInstance) {
+            youtubePlayerInstance = new YT.Player('youtubePlayer', {
+                height: '200',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 1,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'showinfo': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        } else {
+            youtubePlayerInstance.loadVideoById(videoId);
+        }
+        
+        currentYoutubeVideoId = videoId;
+        
+        // Switch to YouTube playlist
+        if (playlistSelect) playlistSelect.value = 'youtube';
+        
+        // Get video title (would need API for this, but we'll show the video ID for now)
+        if (youtubeVideoTitle) {
+            youtubeVideoTitle.textContent = `Video ID: ${videoId}`;
+        }
+    };
+    
+    initPlayer();
+}
+
+function onPlayerReady(event) {
+    event.target.playVideo();
+    if (trackName) trackName.textContent = 'YouTube Audio';
+}
+
+function onPlayerStateChange(event) {
+    // Handle player state changes if needed
+    if (event.data === YT.PlayerState.PLAYING) {
+        if (playIcon) playIcon.textContent = '⏸';
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        if (playIcon) playIcon.textContent = '▶';
+    }
+}
+
+// Handle YouTube playlist selection
+if (playlistSelect) {
+    playlistSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'youtube') {
+            if (!currentYoutubeVideoId) {
+                if (youtubeSearchModal) youtubeSearchModal.classList.add('active');
+                showNotification('Search YouTube to play audio', 3000);
+            }
+        }
+    });
+}
+
 // ==================== START APPLICATION ====================
 window.addEventListener('load', () => {
     init();
     initChat();
+    
+    // Check if YouTube API is already loaded
+    if (typeof YT !== 'undefined' && YT.Player) {
+        youtubeAPIReady = true;
+    }
 });

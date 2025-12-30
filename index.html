@@ -7,6 +7,7 @@
     <title>Fountain - Work Room</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
     <!-- Settings Panel -->
@@ -152,21 +153,96 @@
                     </div>
                 </div>
 
-                <!-- Ambient Sounds -->
-                <div class="feature-card">
-                    <div class="ambient-header">
-                        <h3>🎵 Ambient Sounds</h3>
-                        <input type="text" id="ambientSearch" placeholder="Search sounds..." class="ambient-search">
+                <!-- Music Player -->
+                <div class="feature-card music-section">
+                    <div class="section-header">
+                        <h3>🎵 Study Music</h3>
+                        <div class="music-header-actions">
+                            <select id="playlistSelect" class="playlist-select">
+                                <option value="lofi">Lo-Fi Hip Hop</option>
+                                <option value="classical">Classical</option>
+                                <option value="jazz">Jazz</option>
+                                <option value="ambient">Ambient</option>
+                                <option value="piano">Piano</option>
+                                <option value="nature">Nature Sounds</option>
+                                <option value="custom">My Music</option>
+                                <option value="youtube">YouTube</option>
+                            </select>
+                            <button id="youtubeSearchBtn" class="youtube-search-btn" title="Search YouTube">🔍 YouTube</button>
+                            <button id="uploadMusicBtn" class="upload-music-btn" title="Upload your own music">📤 Upload Music</button>
+                            <button id="manageMusicBtn" class="manage-music-btn" title="Manage uploaded music">🎼 My Music</button>
+                        </div>
                     </div>
-                    <div class="sound-options" id="soundOptions">
-                        <!-- Sounds will be generated dynamically -->
+                    <div class="music-controls">
+                        <button id="playPauseBtn" class="control-btn" aria-label="Play/Pause">
+                            <span id="playIcon">▶</span>
+                        </button>
+                        <div class="music-info">
+                            <p id="trackName">Select a playlist to start</p>
+                            <div class="volume-control">
+                                <span>🔊</span>
+                                <input type="range" id="volumeSlider" min="0" max="100" value="50" aria-label="Volume">
+                            </div>
+                        </div>
                     </div>
-                    <div class="ambient-volume">
-                        <label>Ambient Volume:</label>
-                        <input type="range" id="ambientVolume" min="0" max="100" value="30">
+                    <input type="file" id="musicFileInput" accept="audio/*" multiple style="display: none;">
+                    <audio id="backgroundMusic" loop preload="auto"></audio>
+                </div>
+
+                <!-- Music Upload Modal -->
+                <div class="music-modal" id="musicUploadModal">
+                    <div class="music-modal-content">
+                        <div class="music-modal-header">
+                            <h3>📤 Upload Your Music</h3>
+                            <button class="close-music-modal" id="closeMusicModal">×</button>
+                        </div>
+                        <div class="music-upload-area">
+                            <input type="file" id="musicUploadInput" accept="audio/*" multiple>
+                            <div class="upload-dropzone" id="uploadDropzone">
+                                <p>📁 Drag & drop music files here</p>
+                                <p>or</p>
+                                <button class="browse-files-btn" onclick="document.getElementById('musicUploadInput').click()">Browse Files</button>
+                                <p class="upload-hint">Supports MP3, WAV, OGG, M4A (Max 10MB per file)</p>
+                            </div>
+                            <div id="uploadProgress" class="upload-progress" style="display: none;"></div>
+                            <div id="uploadedFilesList" class="uploaded-files-list"></div>
+                        </div>
                     </div>
-                    <div class="ambient-note">
-                        <p>💡 <strong>Note:</strong> These are generated ambient sounds. For real audio files, add your own sound files and update the <code>ambientSounds</code> object in <code>script.js</code>.</p>
+                </div>
+
+                <!-- Manage Music Modal -->
+                <div class="music-modal" id="manageMusicModal">
+                    <div class="music-modal-content">
+                        <div class="music-modal-header">
+                            <h3>🎼 My Uploaded Music</h3>
+                            <button class="close-music-modal" id="closeManageModal">×</button>
+                        </div>
+                        <div class="my-music-list" id="myMusicList">
+                            <p class="no-music-message">No music uploaded yet. Click "Upload Music" to add your tracks!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YouTube Search Modal -->
+                <div class="music-modal" id="youtubeSearchModal">
+                    <div class="music-modal-content youtube-modal-content">
+                        <div class="music-modal-header">
+                            <h3>🔍 Search YouTube</h3>
+                            <button class="close-music-modal" id="closeYoutubeModal">×</button>
+                        </div>
+                        <div class="youtube-search-container">
+                            <div class="youtube-search-box">
+                                <input type="text" id="youtubeSearchInput" placeholder="Search for music, study sounds, or any audio..." class="youtube-search-input">
+                                <button id="youtubeSearchButton" class="youtube-search-submit">Search</button>
+                            </div>
+                            <div id="youtubeResults" class="youtube-results"></div>
+                        </div>
+                        <div id="youtubePlayerContainer" class="youtube-player-container" style="display: none;">
+                            <div id="youtubePlayer"></div>
+                            <div class="youtube-player-info">
+                                <p id="youtubeNowPlaying">Now playing: <span id="youtubeVideoTitle"></span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -351,11 +351,12 @@ function init() {
     // Load user uploaded music
     loadUserMusic();
     
-    // Load default playlist
+    // Set default volume (don't autoplay - wait for user interaction)
     if (audio && playlistSelect) {
-        loadPlaylist('lofi');
         audio.volume = 0.5;
         if (volumeSlider) volumeSlider.value = 50;
+        // Just load the playlist without playing
+        loadPlaylist('lofi', false);
     }
     
     // Set intervals
@@ -372,7 +373,7 @@ function init() {
 }
 
 // ==================== MUSIC CONTROLS ====================
-function loadPlaylist(playlistKey) {
+function loadPlaylist(playlistKey, autoPlay = false) {
     const playlist = playlists[playlistKey];
     if (!playlist || !audio) return;
     
@@ -398,18 +399,23 @@ function loadPlaylist(playlistKey) {
     audio.src = trackUrl;
     audio.load();
     
-    // Try to play automatically
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-        playPromise
-            .then(() => {
-                if (playIcon) playIcon.textContent = '⏸';
-            })
-            .catch((error) => {
-                console.error('Playback failed:', error);
-                if (playIcon) playIcon.textContent = '▶';
-                showNotification('Unable to play music. Some tracks may require user interaction first.', 3000);
-            });
+    // Only try to play if autoPlay is true (user-initiated action)
+    if (autoPlay) {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    if (playIcon) playIcon.textContent = '⏸';
+                })
+                .catch((error) => {
+                    console.error('Playback failed:', error);
+                    if (playIcon) playIcon.textContent = '▶';
+                    // Don't show error notification for autoplay failures
+                });
+        }
+    } else {
+        // Just load, don't play - wait for user to click play button
+        if (playIcon) playIcon.textContent = '▶';
     }
 }
 
@@ -431,23 +437,22 @@ if (audio) {
 if (playlistSelect) {
     playlistSelect.addEventListener('change', (e) => {
         const wasPlaying = audio && !audio.paused;
-        loadPlaylist(e.target.value);
-        if (wasPlaying) {
-            setTimeout(() => {
-                audio.play().catch(() => {});
-            }, 100);
-        }
+        // Load playlist and auto-play only if music was already playing (user-initiated)
+        loadPlaylist(e.target.value, wasPlaying);
     });
 }
 
 // Play/Pause button
 if (playPauseBtn) {
     playPauseBtn.addEventListener('click', () => {
+        // If no source loaded, load the current playlist and play
         if (!audio.src) {
-            loadPlaylist(playlistSelect ? playlistSelect.value : 'lofi');
+            const playlistKey = playlistSelect ? playlistSelect.value : 'lofi';
+            loadPlaylist(playlistKey, true); // true = autoPlay after loading
             return;
         }
         
+        // Toggle play/pause
         if (audio.paused) {
             const playPromise = audio.play();
             if (playPromise !== undefined) {

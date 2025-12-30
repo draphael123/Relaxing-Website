@@ -1,0 +1,17 @@
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Water droplet at top -->
+  <path d="M30 5 C28 5, 26 7, 26 9 C26 11, 28 13, 30 15 C32 13, 34 11, 34 9 C34 7, 32 5, 30 5 Z" fill="#1a365d"/>
+  
+  <!-- Left side - dark blue curved shapes -->
+  <path d="M15 20 Q20 25, 20 30 Q20 35, 15 40 Q10 35, 10 30 Q10 25, 15 20 Z" fill="#1a365d"/>
+  <path d="M15 35 Q20 40, 20 45 Q20 50, 15 55 Q10 50, 10 45 Q10 40, 15 35 Z" fill="#1a365d"/>
+  
+  <!-- Right side - bright teal curved shapes -->
+  <path d="M20 20 Q25 25, 25 30 Q25 35, 20 40 Q15 35, 15 30 Q15 25, 20 20 Z" fill="#14b8a6"/>
+  <path d="M20 35 Q25 40, 25 45 Q25 50, 20 55 Q15 50, 15 45 Q15 40, 20 35 Z" fill="#14b8a6"/>
+  
+  <!-- Additional curved shapes for fountain effect -->
+  <path d="M12 25 Q17 30, 17 35 Q17 40, 12 45 Q7 40, 7 35 Q7 30, 12 25 Z" fill="#1a365d" opacity="0.8"/>
+  <path d="M23 25 Q28 30, 28 35 Q28 40, 23 45 Q18 40, 18 35 Q18 30, 23 25 Z" fill="#14b8a6" opacity="0.8"/>
+</svg>
+

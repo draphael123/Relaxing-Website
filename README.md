@@ -2,6 +2,14 @@
 
 A comprehensive, feature-rich website designed for focused studying and working. Features automatic relaxing music playback, advanced Pomodoro timer, task management, statistics tracking, live chat, and much more!
 
+## 🌐 Live Website
+
+**Your website is publicly accessible at:**
+- **Primary URL:** https://fountain-work-room.vercel.app
+- **Alternative:** https://fountain-work-room-daniel-8982s-projects.vercel.app
+
+The website is live and ready to use! Share these URLs with anyone you want to access the site.
+
 ## ✨ Features
 
 ### 🎵 Music & Audio

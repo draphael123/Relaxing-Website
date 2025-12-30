@@ -54,27 +54,6 @@
             </div>
             
             <div class="settings-section">
-                <h3>🎵 Music</h3>
-                <div class="settings-group">
-                    <label class="settings-label">Auto-play Music:</label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="autoPlayMusic" checked>
-                        <span>Automatically start music on page load</span>
-                    </label>
-                </div>
-                <div class="settings-group">
-                    <label class="settings-label">Default Volume:</label>
-                    <input type="range" id="defaultVolume" min="0" max="100" value="50" class="settings-slider">
-                    <span id="volumeDisplay">50%</span>
-                </div>
-                <div class="settings-group">
-                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
-                        💡 <strong>Note:</strong> To use your own music, edit the <code>playlists</code> object in <code>script.js</code> and add your music file paths.
-                    </p>
-                </div>
-            </div>
-            
-            <div class="settings-section">
                 <h3>⏱️ Timer</h3>
                 <div class="settings-group">
                     <label class="settings-label">Default Timer Duration (minutes):</label>
@@ -89,24 +68,8 @@
             </div>
             
             <div class="settings-section">
-                <h3>🤖 AI Text Improver</h3>
-                <div class="settings-group">
-                    <label class="settings-label">OpenAI API Key (Optional):</label>
-                    <input type="password" id="openaiApiKey" placeholder="sk-..." class="settings-input">
-                    <p class="settings-hint">Add your API key for better AI improvements. Get one at <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI</a></p>
-                </div>
-                <div class="settings-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="useFreeAI" checked>
-                        <span>Use free AI service (limited features)</span>
-                    </label>
-                </div>
-            </div>
-            
-            <div class="settings-section">
                 <h3>⌨️ Keyboard Shortcuts</h3>
                 <div class="shortcuts-list">
-                    <p><kbd>Space</kbd> - Play/Pause Music</p>
                     <p><kbd>1-3</kbd> - Timer Presets</p>
                     <p><kbd>N</kbd> - New Quote</p>
                     <p><kbd>F</kbd> - Focus Mode</p>
@@ -147,34 +110,6 @@
         </header>
 
         <main>
-            <!-- Music Section with Playlist Selection -->
-            <div class="music-section">
-                <div class="section-header">
-                    <h3>🎵 Study Music</h3>
-                    <select id="playlistSelect" class="playlist-select">
-                        <option value="lofi">Lo-Fi Hip Hop</option>
-                        <option value="classical">Classical</option>
-                        <option value="nature">Nature Sounds</option>
-                        <option value="jazz">Jazz</option>
-                        <option value="ambient">Ambient</option>
-                        <option value="piano">Piano</option>
-                    </select>
-                </div>
-                <div class="music-controls">
-                    <button id="playPauseBtn" class="control-btn" aria-label="Play/Pause">
-                        <span id="playIcon">▶</span>
-                    </button>
-                    <div class="music-info">
-                        <p id="trackName">Relaxing Study Music</p>
-                        <div class="volume-control">
-                            <span>🔊</span>
-                            <input type="range" id="volumeSlider" min="0" max="100" value="50" aria-label="Volume">
-                        </div>
-                    </div>
-                </div>
-                <audio id="backgroundMusic" loop preload="auto"></audio>
-            </div>
-
             <!-- Motivation Section -->
             <div class="motivation-section">
                 <div class="quote-container">
@@ -219,18 +154,19 @@
 
                 <!-- Ambient Sounds -->
                 <div class="feature-card">
-                    <h3>🎵 Ambient Sounds</h3>
-                    <div class="sound-options">
-                        <button class="sound-btn" data-sound="rain">🌧️ Rain</button>
-                        <button class="sound-btn" data-sound="forest">🌲 Forest</button>
-                        <button class="sound-btn" data-sound="ocean">🌊 Ocean</button>
-                        <button class="sound-btn" data-sound="fireplace">🔥 Fireplace</button>
-                        <button class="sound-btn" data-sound="cafe">☕ Cafe</button>
-                        <button class="sound-btn" data-sound="thunder">⚡ Thunder</button>
+                    <div class="ambient-header">
+                        <h3>🎵 Ambient Sounds</h3>
+                        <input type="text" id="ambientSearch" placeholder="Search sounds..." class="ambient-search">
+                    </div>
+                    <div class="sound-options" id="soundOptions">
+                        <!-- Sounds will be generated dynamically -->
                     </div>
                     <div class="ambient-volume">
                         <label>Ambient Volume:</label>
                         <input type="range" id="ambientVolume" min="0" max="100" value="30">
+                    </div>
+                    <div class="ambient-note">
+                        <p>💡 <strong>Note:</strong> These are generated ambient sounds. For real audio files, add your own sound files and update the <code>ambientSounds</code> object in <code>script.js</code>.</p>
                     </div>
                 </div>
             </div>
@@ -248,64 +184,6 @@
                 <ul id="taskList" class="task-list"></ul>
             </div>
 
-            <!-- AI Text Improver -->
-            <div class="feature-card ai-text-improver-card">
-                <h3>✨ AI Text Improver</h3>
-                <p class="ai-intro">Enhance your writing with AI-powered improvements</p>
-                
-                <div class="improvement-options">
-                    <label class="improvement-option">
-                        <input type="radio" name="improvementType" value="grammar" checked>
-                        <span>Grammar & Spelling</span>
-                    </label>
-                    <label class="improvement-option">
-                        <input type="radio" name="improvementType" value="clarity">
-                        <span>Clarity & Flow</span>
-                    </label>
-                    <label class="improvement-option">
-                        <input type="radio" name="improvementType" value="professional">
-                        <span>Professional Tone</span>
-                    </label>
-                    <label class="improvement-option">
-                        <input type="radio" name="improvementType" value="concise">
-                        <span>Make Concise</span>
-                    </label>
-                </div>
-
-                <div class="text-improver-container">
-                    <div class="text-input-section">
-                        <label class="text-label">Your Text:</label>
-                        <textarea 
-                            id="textToImprove" 
-                            placeholder="Enter the text you want to improve..."
-                            rows="6"
-                            class="text-improver-input"
-                        ></textarea>
-                        <div class="char-count">
-                            <span id="charCount">0</span> characters
-                        </div>
-                    </div>
-                    
-                    <button id="improveTextBtn" class="improve-btn">
-                        <span id="improveBtnText">✨ Improve Text</span>
-                        <span id="improveBtnLoader" class="loader" style="display: none;">⏳</span>
-                    </button>
-
-                    <div class="text-output-section" id="textOutputSection" style="display: none;">
-                        <label class="text-label">Improved Text:</label>
-                        <div class="improved-text-display" id="improvedTextDisplay"></div>
-                        <div class="text-actions">
-                            <button class="action-btn-small" id="copyImprovedBtn">📋 Copy</button>
-                            <button class="action-btn-small" id="replaceTextBtn">🔄 Replace Original</button>
-                            <button class="action-btn-small" id="clearTextBtn">🗑️ Clear</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ai-note">
-                    <p>💡 <strong>Note:</strong> This feature uses AI to improve your text. For best results, add your OpenAI API key in settings.</p>
-                </div>
-            </div>
 
             <!-- Statistics Panel -->
             <div class="stats-panel" id="statsPanel">
@@ -413,15 +291,23 @@
             <div class="chat-welcome">
                 <p>Welcome to Fountain Work Room chat! 💬</p>
                 <p>Share your study progress, ask questions, or just say hi!</p>
-                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">Click ✏️ to set your username</p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #666;">Click ✏️ to set your username</p>
                 <div class="chat-info-box" style="margin-top: 15px; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; font-size: 0.85em;">
-                    <strong>Note:</strong> Chat syncs across your browser tabs. For cross-user chat, a backend service is needed.
+                    <strong>💬 Chat with other users!</strong> Messages are shared across all users in real-time.
                 </div>
             </div>
         </div>
         <div class="chat-input-container">
-            <input type="text" id="chatInput" placeholder="Type your message..." maxlength="500">
-            <button id="sendChatBtn" class="send-chat-btn">Send</button>
+            <div class="chat-input-wrapper">
+                <input type="file" id="chatFileInput" accept="image/*" style="display: none;">
+                <button id="uploadFileBtn" class="upload-file-btn" title="Upload image/screenshot">📎</button>
+                <input type="text" id="chatInput" placeholder="Type your message..." maxlength="500">
+                <button id="sendChatBtn" class="send-chat-btn">Send</button>
+            </div>
+            <div id="imagePreview" class="image-preview" style="display: none;">
+                <img id="previewImage" src="" alt="Preview">
+                <button id="removePreviewBtn" class="remove-preview-btn">×</button>
+            </div>
         </div>
         <div class="chat-info">
             <span id="chatUserCount">0</span> users online

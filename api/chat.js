@@ -28,16 +28,17 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         // Add new message
-        const { userName, text } = req.body;
+        const { userName, text, image } = req.body;
 
-        if (!userName || !text) {
-            return res.status(400).json({ error: 'Missing userName or text' });
+        if (!userName || (!text && !image)) {
+            return res.status(400).json({ error: 'Missing userName or content (text/image)' });
         }
 
         const message = {
             id: Date.now() + Math.random(),
             userName: userName,
-            text: text,
+            text: text || '',
+            image: image || null,
             timestamp: Date.now()
         };
 

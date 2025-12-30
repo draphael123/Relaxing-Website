@@ -1,10 +1,4 @@
 // ==================== GLOBAL VARIABLES ====================
-const audio = document.getElementById('backgroundMusic');
-const playPauseBtn = document.getElementById('playPauseBtn');
-const playIcon = document.getElementById('playIcon');
-const volumeSlider = document.getElementById('volumeSlider');
-const playlistSelect = document.getElementById('playlistSelect');
-const trackName = document.getElementById('trackName');
 
 const timerDisplay = document.getElementById('timerDisplay');
 const focusTimer = document.getElementById('focusTimer');
@@ -16,7 +10,6 @@ const progressRing = document.querySelector('.progress-ring-circle');
 const sessionCount = document.getElementById('sessionCount');
 const breakType = document.getElementById('breakType');
 
-const soundButtons = document.querySelectorAll('.sound-btn');
 const ambientVolume = document.getElementById('ambientVolume');
 
 const quoteText = document.getElementById('quoteText');
@@ -48,9 +41,6 @@ const customBgColor = document.getElementById('customBgColor');
 const soundNotifications = document.getElementById('soundNotifications');
 const visualNotifications = document.getElementById('visualNotifications');
 const customNotificationText = document.getElementById('customNotificationText');
-const autoPlayMusic = document.getElementById('autoPlayMusic');
-const defaultVolume = document.getElementById('defaultVolume');
-const volumeDisplay = document.getElementById('volumeDisplay');
 const defaultTimerDuration = document.getElementById('defaultTimerDuration');
 const autoStartBreak = document.getElementById('autoStartBreak');
 
@@ -84,23 +74,14 @@ const usernameModal = document.getElementById('usernameModal');
 const usernameInput = document.getElementById('usernameInput');
 const saveUsernameBtn = document.getElementById('saveUsernameBtn');
 const cancelUsernameBtn = document.getElementById('cancelUsernameBtn');
+const chatFileInput = document.getElementById('chatFileInput');
+const uploadFileBtn = document.getElementById('uploadFileBtn');
+const imagePreview = document.getElementById('imagePreview');
+const previewImage = document.getElementById('previewImage');
+const removePreviewBtn = document.getElementById('removePreviewBtn');
 
 const notification = document.getElementById('notification');
 
-// AI Text Improver
-const textToImprove = document.getElementById('textToImprove');
-const improveTextBtn = document.getElementById('improveTextBtn');
-const improveBtnText = document.getElementById('improveBtnText');
-const improveBtnLoader = document.getElementById('improveBtnLoader');
-const improvedTextDisplay = document.getElementById('improvedTextDisplay');
-const textOutputSection = document.getElementById('textOutputSection');
-const copyImprovedBtn = document.getElementById('copyImprovedBtn');
-const replaceTextBtn = document.getElementById('replaceTextBtn');
-const clearTextBtn = document.getElementById('clearTextBtn');
-const charCount = document.getElementById('charCount');
-const improvementTypeRadios = document.querySelectorAll('input[name="improvementType"]');
-const openaiApiKey = document.getElementById('openaiApiKey');
-const useFreeAI = document.getElementById('useFreeAI');
 
 // State variables
 let timerInterval = null;
@@ -110,10 +91,6 @@ let timerMode = 'pomodoro';
 let pomodoroSessions = 0;
 let isBreakTime = false;
 let totalSeconds = 25 * 60;
-let audioContext = null;
-let analyser = null;
-let dataArray = null;
-let animationFrame = null;
 
 // Chat variables
 let chatUserName = null;
@@ -124,65 +101,68 @@ const CHAT_API_URL = 'https://api.jsonbin.io/v3/b'; // Using JSONBin for shared 
 const CHAT_BIN_ID = '675a123e1f5677401f3a1234'; // This will be created/updated
 let chatLastUpdate = 0;
 
-// Music playlists - Note: Add your own music files for best experience
-// You can use free music from: https://freemusicarchive.org/ or https://incompetech.com/music/
-const playlists = {
-    lofi: {
-        name: 'Lo-Fi Hip Hop',
-        tracks: [
-            // Add your own music file path here
-            // Example: './music/lofi.mp3' or 'https://your-server.com/music/lofi.mp3'
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-        ]
-    },
-    classical: {
-        name: 'Classical',
-        tracks: [
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-        ]
-    },
-    nature: {
-        name: 'Nature Sounds',
-        tracks: [
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-        ]
-    },
-    jazz: {
-        name: 'Jazz',
-        tracks: [
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-        ]
-    },
-    ambient: {
-        name: 'Ambient',
-        tracks: [
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-        ]
-    },
-    piano: {
-        name: 'Piano',
-        tracks: [
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-        ]
-    }
-};
 
-// Ambient sounds (using free audio sources)
-const ambientSounds = {
-    rain: new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),
-    forest: new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),
-    ocean: new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),
-    fireplace: new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),
-    cafe: new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),
-    thunder: new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')
-};
+// 50 Different Ambient Sounds
+const ambientSoundList = [
+    { id: 'rain', name: 'Rain', emoji: '🌧️', type: 'nature' },
+    { id: 'forest', name: 'Forest', emoji: '🌲', type: 'nature' },
+    { id: 'ocean', name: 'Ocean Waves', emoji: '🌊', type: 'nature' },
+    { id: 'fireplace', name: 'Fireplace', emoji: '🔥', type: 'indoor' },
+    { id: 'cafe', name: 'Coffee Shop', emoji: '☕', type: 'indoor' },
+    { id: 'thunder', name: 'Thunderstorm', emoji: '⚡', type: 'nature' },
+    { id: 'wind', name: 'Wind', emoji: '💨', type: 'nature' },
+    { id: 'birds', name: 'Birds Chirping', emoji: '🐦', type: 'nature' },
+    { id: 'crickets', name: 'Crickets', emoji: '🦗', type: 'nature' },
+    { id: 'waterfall', name: 'Waterfall', emoji: '🏞️', type: 'nature' },
+    { id: 'river', name: 'Flowing River', emoji: '🌊', type: 'nature' },
+    { id: 'beach', name: 'Beach', emoji: '🏖️', type: 'nature' },
+    { id: 'jungle', name: 'Jungle', emoji: '🌴', type: 'nature' },
+    { id: 'snow', name: 'Snowfall', emoji: '❄️', type: 'nature' },
+    { id: 'desert', name: 'Desert Wind', emoji: '🏜️', type: 'nature' },
+    { id: 'library', name: 'Library', emoji: '📚', type: 'indoor' },
+    { id: 'train', name: 'Train', emoji: '🚂', type: 'urban' },
+    { id: 'city', name: 'City Ambience', emoji: '🏙️', type: 'urban' },
+    { id: 'subway', name: 'Subway', emoji: '🚇', type: 'urban' },
+    { id: 'airport', name: 'Airport', emoji: '✈️', type: 'urban' },
+    { id: 'fan', name: 'Fan', emoji: '🌀', type: 'indoor' },
+    { id: 'white-noise', name: 'White Noise', emoji: '📻', type: 'indoor' },
+    { id: 'pink-noise', name: 'Pink Noise', emoji: '🎵', type: 'indoor' },
+    { id: 'brown-noise', name: 'Brown Noise', emoji: '🔊', type: 'indoor' },
+    { id: 'wind-chimes', name: 'Wind Chimes', emoji: '🎐', type: 'nature' },
+    { id: 'tibetan-bowls', name: 'Tibetan Bowls', emoji: '🔔', type: 'meditation' },
+    { id: 'singing-bowl', name: 'Singing Bowl', emoji: '🎶', type: 'meditation' },
+    { id: 'gong', name: 'Gong', emoji: '🥁', type: 'meditation' },
+    { id: 'bells', name: 'Bells', emoji: '🔔', type: 'meditation' },
+    { id: 'zen-garden', name: 'Zen Garden', emoji: '🧘', type: 'meditation' },
+    { id: 'temple', name: 'Temple', emoji: '🛕', type: 'meditation' },
+    { id: 'monastery', name: 'Monastery', emoji: '⛪', type: 'meditation' },
+    { id: 'cathedral', name: 'Cathedral', emoji: '⛪', type: 'meditation' },
+    { id: 'wind-tunnel', name: 'Wind Tunnel', emoji: '🌪️', type: 'nature' },
+    { id: 'underwater', name: 'Underwater', emoji: '🐠', type: 'nature' },
+    { id: 'cave', name: 'Cave', emoji: '🕳️', type: 'nature' },
+    { id: 'mountain', name: 'Mountain', emoji: '⛰️', type: 'nature' },
+    { id: 'meadow', name: 'Meadow', emoji: '🌾', type: 'nature' },
+    { id: 'farm', name: 'Farm', emoji: '🚜', type: 'nature' },
+    { id: 'night', name: 'Night Sounds', emoji: '🌙', type: 'nature' },
+    { id: 'morning', name: 'Morning', emoji: '🌅', type: 'nature' },
+    { id: 'evening', name: 'Evening', emoji: '🌆', type: 'nature' },
+    { id: 'winter', name: 'Winter', emoji: '❄️', type: 'nature' },
+    { id: 'summer', name: 'Summer', emoji: '☀️', type: 'nature' },
+    { id: 'autumn', name: 'Autumn', emoji: '🍂', type: 'nature' },
+    { id: 'spring', name: 'Spring', emoji: '🌸', type: 'nature' },
+    { id: 'space', name: 'Space', emoji: '🌌', type: 'ambient' },
+    { id: 'cosmic', name: 'Cosmic', emoji: '✨', type: 'ambient' },
+    { id: 'etheral', name: 'Ethereal', emoji: '🌟', type: 'ambient' },
+    { id: 'dreamy', name: 'Dreamy', emoji: '💫', type: 'ambient' }
+];
 
-Object.values(ambientSounds).forEach(sound => {
-    sound.loop = true;
-    sound.volume = 0.3;
-});
-
+// Ambient sound generators using Web Audio API
+let ambientAudioContext = null;
+let ambientOscillators = [];
+let ambientGainNodes = [];
 let activeAmbientSound = null;
+const soundOptions = document.getElementById('soundOptions');
+const ambientSearch = document.getElementById('ambientSearch');
 
 // Motivational quotes
 const motivationalQuotes = [
@@ -222,35 +202,7 @@ function init() {
     incrementTotalVisitors();
     sendHeartbeat();
     loadActiveUsers();
-    
-    // Load music settings
-    const savedVolume = localStorage.getItem('defaultVolume') || '50';
-    audio.volume = savedVolume / 100;
-    volumeSlider.value = savedVolume;
-    defaultVolume.value = savedVolume;
-    volumeDisplay.textContent = savedVolume + '%';
-    
-    loadPlaylist('lofi');
-    
-    // Auto-play music if enabled and source is available
-    const shouldAutoPlay = localStorage.getItem('autoPlayMusic') !== 'false';
-    if (shouldAutoPlay && autoPlayMusic && audio.src && !audio.src.includes('soundhelix.com/examples')) {
-        autoPlayMusic.checked = true;
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                playIcon.textContent = '⏸';
-            }).catch(() => {
-                playIcon.textContent = '▶';
-                // Autoplay was blocked - this is normal browser behavior
-            });
-        }
-    } else if (autoPlayMusic) {
-        autoPlayMusic.checked = false;
-        if (!audio.src || audio.src.includes('soundhelix.com/examples')) {
-            showNotification('Add your own music files to enable playback. See settings for instructions.', 5000);
-        }
-    }
+    initAmbientSounds();
     
     // Set intervals
     setInterval(sendHeartbeat, 30000);
@@ -265,103 +217,362 @@ function init() {
     }, 30000);
 }
 
-// ==================== MUSIC CONTROLS ====================
-function loadPlaylist(playlistKey) {
-    const playlist = playlists[playlistKey];
-    if (!playlist || !playlist.tracks.length) return;
+// ==================== AMBIENT SOUNDS ====================
+
+// Initialize ambient sounds UI
+function initAmbientSounds() {
+    if (!soundOptions) return;
     
-    trackName.textContent = playlist.name;
-    
-    // Check if the track URL is a placeholder
-    const trackUrl = playlist.tracks[0];
-    if (trackUrl.includes('soundhelix.com/examples')) {
-        // This is a placeholder - show helpful message
-        trackName.textContent = playlist.name + ' (Add your own music)';
-        showNotification('Music sources are placeholders. Add your own music files in script.js', 6000);
-        audio.src = '';
-        return;
-    }
-    
-    audio.src = trackUrl;
-    
-    // Add error handling
-    audio.addEventListener('error', () => {
-        trackName.textContent = playlist.name + ' (Unable to load)';
-        showNotification('Music file not found. Please add your own music files.', 5000);
-    }, { once: true });
-    
-    audio.load();
+    // Create buttons for all ambient sounds
+    ambientSoundList.forEach(sound => {
+        const btn = document.createElement('button');
+        btn.className = 'sound-btn';
+        btn.dataset.sound = sound.id;
+        btn.dataset.type = sound.type;
+        btn.dataset.name = sound.name.toLowerCase();
+        btn.innerHTML = `${sound.emoji} ${sound.name}`;
+        btn.addEventListener('click', () => toggleAmbientSound(sound.id, btn));
+        soundOptions.appendChild(btn);
+    });
 }
 
-playlistSelect.addEventListener('change', (e) => {
-    loadPlaylist(e.target.value);
-    if (!audio.paused) {
-        audio.play();
+function toggleAmbientSound(soundId, buttonElement) {
+    // Toggle sound
+    if (buttonElement.classList.contains('active')) {
+        // Stop current sound
+        stopAmbientSound();
+        buttonElement.classList.remove('active');
+    } else {
+        // Stop any currently playing sound
+        document.querySelectorAll('.sound-btn.active').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        stopAmbientSound();
+        
+        // Start new sound
+        startAmbientSound(soundId);
+        buttonElement.classList.add('active');
     }
-});
+}
 
-playPauseBtn.addEventListener('click', () => {
-    if (audio.paused) {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => {
-                    playIcon.textContent = '⏸';
-                })
-                .catch(error => {
-                    console.error('Playback failed:', error);
-                    playIcon.textContent = '▶';
-                    showNotification('Unable to play music. Please check your browser settings or add your own music files.', 5000);
-                });
+function stopAmbientSound() {
+    // Stop all oscillators
+    ambientOscillators.forEach(osc => {
+        try {
+            osc.stop();
+            osc.disconnect();
+        } catch (e) {}
+    });
+    ambientOscillators = [];
+    ambientGainNodes = [];
+    activeAmbientSound = null;
+}
+
+function startAmbientSound(soundId) {
+    // Initialize audio context if needed
+    if (!ambientAudioContext) {
+        ambientAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    // Resume context if suspended
+    if (ambientAudioContext.state === 'suspended') {
+        ambientAudioContext.resume();
+    }
+    
+    const volume = ambientVolume ? ambientVolume.value / 100 : 0.3;
+    
+    // Generate different sounds based on type
+    const sound = ambientSoundList.find(s => s.id === soundId);
+    if (!sound) return;
+    
+    stopAmbientSound(); // Clear any existing sounds
+    
+    switch(sound.type) {
+        case 'nature':
+            generateNatureSound(soundId, volume);
+            break;
+        case 'indoor':
+            generateIndoorSound(soundId, volume);
+            break;
+        case 'urban':
+            generateUrbanSound(soundId, volume);
+            break;
+        case 'meditation':
+            generateMeditationSound(soundId, volume);
+            break;
+        case 'ambient':
+            generateAmbientSound(soundId, volume);
+            break;
+        default:
+            generateWhiteNoise(volume);
+    }
+    
+    activeAmbientSound = soundId;
+}
+
+function generateNatureSound(soundId, volume) {
+    const gainNode = ambientAudioContext.createGain();
+    gainNode.gain.value = volume;
+    gainNode.connect(ambientAudioContext.destination);
+    ambientGainNodes.push(gainNode);
+    
+    if (soundId === 'rain' || soundId === 'snow') {
+        // Rain/snow: multiple oscillators with noise
+        for (let i = 0; i < 5; i++) {
+            const osc = ambientAudioContext.createOscillator();
+            const gain = ambientAudioContext.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.value = 100 + Math.random() * 200;
+            gain.gain.value = 0.1 * volume;
+            osc.connect(gain);
+            gain.connect(gainNode);
+            osc.start();
+            ambientOscillators.push(osc);
+        }
+    } else if (soundId === 'wind' || soundId === 'wind-tunnel' || soundId === 'desert') {
+        // Wind: low frequency noise
+        const osc = ambientAudioContext.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 20 + Math.random() * 30;
+        osc.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    } else if (soundId === 'ocean' || soundId === 'beach' || soundId === 'waterfall' || soundId === 'river') {
+        // Water: multiple frequencies
+        for (let i = 0; i < 3; i++) {
+            const osc = ambientAudioContext.createOscillator();
+            const gain = ambientAudioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 200 + i * 100 + Math.random() * 50;
+            gain.gain.value = 0.15 * volume;
+            osc.connect(gain);
+            gain.connect(gainNode);
+            osc.start();
+            ambientOscillators.push(osc);
+        }
+    } else if (soundId === 'birds' || soundId === 'crickets' || soundId === 'night' || soundId === 'morning' || soundId === 'evening') {
+        // Birds/Crickets/Night: high frequency chirps
+        for (let i = 0; i < 3; i++) {
+            const osc = ambientAudioContext.createOscillator();
+            const gain = ambientAudioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 1000 + Math.random() * 2000;
+            gain.gain.value = 0.1 * volume;
+            osc.connect(gain);
+            gain.connect(gainNode);
+            osc.start();
+            ambientOscillators.push(osc);
+        }
+    } else if (soundId === 'thunder') {
+        // Thunder: occasional low frequency bursts
+        const osc = ambientAudioContext.createOscillator();
+        osc.type = 'square';
+        osc.frequency.value = 30 + Math.random() * 20;
+        osc.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    } else if (soundId === 'wind-chimes') {
+        // Wind chimes: high frequency bell-like sounds
+        for (let i = 0; i < 4; i++) {
+            const osc = ambientAudioContext.createOscillator();
+            const gain = ambientAudioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 800 + i * 200;
+            gain.gain.value = 0.12 * volume;
+            osc.connect(gain);
+            gain.connect(gainNode);
+            osc.start();
+            ambientOscillators.push(osc);
+        }
+    } else if (soundId === 'underwater') {
+        // Underwater: muffled low frequencies
+        const osc = ambientAudioContext.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 50 + Math.random() * 30;
+        osc.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    } else if (soundId === 'cave') {
+        // Cave: echo-like low frequencies
+        const osc = ambientAudioContext.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 40 + Math.random() * 20;
+        osc.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    } else if (soundId === 'winter' || soundId === 'summer' || soundId === 'autumn' || soundId === 'spring') {
+        // Seasons: mix of nature sounds
+        for (let i = 0; i < 2; i++) {
+            const osc = ambientAudioContext.createOscillator();
+            const gain = ambientAudioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 150 + i * 100 + Math.random() * 50;
+            gain.gain.value = 0.15 * volume;
+            osc.connect(gain);
+            gain.connect(gainNode);
+            osc.start();
+            ambientOscillators.push(osc);
         }
     } else {
-        audio.pause();
-        playIcon.textContent = '▶';
+        // Default nature sound
+        generateWhiteNoise(volume);
     }
-});
+}
 
-volumeSlider.addEventListener('input', (e) => {
-    audio.volume = e.target.value / 100;
-});
-
-audio.addEventListener('play', () => playIcon.textContent = '⏸');
-audio.addEventListener('pause', () => playIcon.textContent = '▶');
-
-
-// ==================== AMBIENT SOUNDS ====================
-soundButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const soundType = btn.dataset.sound;
-        
-        if (btn.classList.contains('active')) {
-            btn.classList.remove('active');
-            if (activeAmbientSound) {
-                activeAmbientSound.pause();
-                activeAmbientSound.currentTime = 0;
-                activeAmbientSound = null;
-            }
-        } else {
-            soundButtons.forEach(b => b.classList.remove('active'));
-            if (activeAmbientSound) {
-                activeAmbientSound.pause();
-                activeAmbientSound.currentTime = 0;
-            }
-            
-            activeAmbientSound = ambientSounds[soundType];
-            if (activeAmbientSound) {
-                activeAmbientSound.volume = ambientVolume.value / 100;
-                activeAmbientSound.play().catch(e => console.log('Ambient sound error:', e));
-                btn.classList.add('active');
-            }
+function generateIndoorSound(soundId, volume) {
+    const gainNode = ambientAudioContext.createGain();
+    gainNode.gain.value = volume;
+    gainNode.connect(ambientAudioContext.destination);
+    ambientGainNodes.push(gainNode);
+    
+    if (soundId === 'white-noise' || soundId === 'pink-noise' || soundId === 'brown-noise') {
+        generateWhiteNoise(volume);
+    } else if (soundId === 'fan') {
+        // Fan: low constant frequency
+        const osc = ambientAudioContext.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 60;
+        osc.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    } else if (soundId === 'fireplace') {
+        // Fireplace: crackling low frequencies
+        for (let i = 0; i < 3; i++) {
+            const osc = ambientAudioContext.createOscillator();
+            const gain = ambientAudioContext.createGain();
+            osc.type = 'square';
+            osc.frequency.value = 80 + i * 40 + Math.random() * 20;
+            gain.gain.value = 0.12 * volume;
+            osc.connect(gain);
+            gain.connect(gainNode);
+            osc.start();
+            ambientOscillators.push(osc);
         }
-    });
-});
-
-ambientVolume.addEventListener('input', (e) => {
-    if (activeAmbientSound) {
-        activeAmbientSound.volume = e.target.value / 100;
+    } else if (soundId === 'cafe' || soundId === 'library') {
+        // Cafe/Library: subtle background noise
+        generateWhiteNoise(volume * 0.5);
+    } else {
+        // Default indoor: white noise
+        generateWhiteNoise(volume);
     }
-});
+}
+
+function generateUrbanSound(soundId, volume) {
+    const gainNode = ambientAudioContext.createGain();
+    gainNode.gain.value = volume;
+    gainNode.connect(ambientAudioContext.destination);
+    ambientGainNodes.push(gainNode);
+    
+    // Urban sounds: mix of frequencies
+    for (let i = 0; i < 4; i++) {
+        const osc = ambientAudioContext.createOscillator();
+        const gain = ambientAudioContext.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 100 + i * 150 + Math.random() * 100;
+        gain.gain.value = 0.1 * volume;
+        osc.connect(gain);
+        gain.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    }
+}
+
+function generateMeditationSound(soundId, volume) {
+    const gainNode = ambientAudioContext.createGain();
+    gainNode.gain.value = volume;
+    gainNode.connect(ambientAudioContext.destination);
+    ambientGainNodes.push(gainNode);
+    
+    if (soundId === 'tibetan-bowls' || soundId === 'singing-bowl' || soundId === 'gong' || soundId === 'bells') {
+        // Bowl sounds: harmonic frequencies
+        for (let i = 0; i < 3; i++) {
+            const osc = ambientAudioContext.createOscillator();
+            const gain = ambientAudioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 200 + i * 150;
+            gain.gain.value = 0.15 * volume;
+            osc.connect(gain);
+            gain.connect(gainNode);
+            osc.start();
+            ambientOscillators.push(osc);
+        }
+    } else {
+        // Default meditation: slow, calming frequencies
+        const osc = ambientAudioContext.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 60 + Math.random() * 40;
+        osc.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    }
+}
+
+function generateAmbientSound(soundId, volume) {
+    const gainNode = ambientAudioContext.createGain();
+    gainNode.gain.value = volume;
+    gainNode.connect(ambientAudioContext.destination);
+    ambientGainNodes.push(gainNode);
+    
+    // Ambient: ethereal frequencies
+    for (let i = 0; i < 3; i++) {
+        const osc = ambientAudioContext.createOscillator();
+        const gain = ambientAudioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 200 + i * 100;
+        gain.gain.value = 0.15 * volume;
+        osc.connect(gain);
+        gain.connect(gainNode);
+        osc.start();
+        ambientOscillators.push(osc);
+    }
+}
+
+function generateWhiteNoise(volume) {
+    const bufferSize = 4096;
+    const buffer = ambientAudioContext.createBuffer(1, bufferSize, ambientAudioContext.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+    }
+    
+    const whiteNoise = ambientAudioContext.createBufferSource();
+    const gainNode = ambientAudioContext.createGain();
+    whiteNoise.buffer = buffer;
+    whiteNoise.loop = true;
+    gainNode.gain.value = volume * 0.3;
+    whiteNoise.connect(gainNode);
+    gainNode.connect(ambientAudioContext.destination);
+    whiteNoise.start();
+    ambientOscillators.push(whiteNoise);
+    ambientGainNodes.push(gainNode);
+}
+
+// Search functionality for ambient sounds
+if (ambientSearch) {
+    ambientSearch.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('.sound-btn').forEach(btn => {
+            const name = btn.dataset.name || '';
+            const type = btn.dataset.type || '';
+            if (name.includes(searchTerm) || type.includes(searchTerm) || searchTerm === '') {
+                btn.style.display = '';
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+    });
+}
+
+if (ambientVolume) {
+    ambientVolume.addEventListener('input', (e) => {
+        const volume = e.target.value / 100;
+        // Update all gain nodes
+        ambientGainNodes.forEach(gain => {
+            gain.gain.value = volume;
+        });
+    });
+}
 
 // ==================== ENHANCED TIMER ====================
 function updateTimerDisplay() {
@@ -597,7 +808,7 @@ suggestionForm.addEventListener('submit', (e) => {
 
 // ==================== SETTINGS ====================
 function loadSettings() {
-    const theme = localStorage.getItem('theme') || 'light';
+    const theme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', theme);
     if (themeToggle) {
         themeToggle.textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
@@ -625,12 +836,6 @@ function loadSettings() {
         customNotificationText.value = localStorage.getItem('customNotificationText') || '';
     }
     
-    if (defaultVolume) {
-        const savedVolume = localStorage.getItem('defaultVolume') || '50';
-        defaultVolume.value = savedVolume;
-        if (volumeDisplay) volumeDisplay.textContent = savedVolume + '%';
-    }
-    
     if (defaultTimerDuration) {
         const savedDuration = localStorage.getItem('defaultTimerDuration') || '25';
         defaultTimerDuration.value = savedDuration;
@@ -640,16 +845,6 @@ function loadSettings() {
         autoStartBreak.checked = localStorage.getItem('autoStartBreak') !== 'false';
     }
     
-    if (openaiApiKey) {
-        const savedKey = localStorage.getItem('openaiApiKey');
-        if (savedKey) {
-            openaiApiKey.value = savedKey;
-        }
-    }
-    
-    if (useFreeAI) {
-        useFreeAI.checked = localStorage.getItem('useFreeAI') !== 'false';
-    }
 }
 
 settingsBtn.addEventListener('click', () => {
@@ -700,22 +895,6 @@ if (customNotificationText) {
     });
 }
 
-if (autoPlayMusic) {
-    autoPlayMusic.addEventListener('change', (e) => {
-        localStorage.setItem('autoPlayMusic', e.target.checked);
-    });
-}
-
-if (defaultVolume) {
-    defaultVolume.addEventListener('input', (e) => {
-        const volume = e.target.value;
-        localStorage.setItem('defaultVolume', volume);
-        if (volumeDisplay) volumeDisplay.textContent = volume + '%';
-        audio.volume = volume / 100;
-        volumeSlider.value = volume;
-    });
-}
-
 if (defaultTimerDuration) {
     defaultTimerDuration.addEventListener('change', (e) => {
         const duration = parseInt(e.target.value);
@@ -736,236 +915,6 @@ if (autoStartBreak) {
     });
 }
 
-if (openaiApiKey) {
-    openaiApiKey.addEventListener('change', (e) => {
-        localStorage.setItem('openaiApiKey', e.target.value);
-    });
-}
-
-if (useFreeAI) {
-    useFreeAI.addEventListener('change', (e) => {
-        localStorage.setItem('useFreeAI', e.target.checked);
-    });
-}
-
-// ==================== AI TEXT IMPROVER ====================
-if (textToImprove) {
-    textToImprove.addEventListener('input', (e) => {
-        if (charCount) {
-            charCount.textContent = e.target.value.length;
-        }
-    });
-}
-
-async function improveTextWithAI(text, improvementType) {
-    const apiKey = openaiApiKey ? openaiApiKey.value.trim() : '';
-    const useFree = useFreeAI ? useFreeAI.checked : true;
-    
-    if (apiKey && !useFree) {
-        // Use OpenAI API
-        return await improveWithOpenAI(text, improvementType, apiKey);
-    } else {
-        // Use free AI service (client-side improvement)
-        return await improveWithFreeAI(text, improvementType);
-    }
-}
-
-async function improveWithOpenAI(text, improvementType, apiKey) {
-    try {
-        const prompts = {
-            grammar: 'Fix grammar and spelling errors in the following text. Return only the corrected text without explanations:',
-            clarity: 'Improve the clarity and flow of the following text. Make it more readable and well-structured. Return only the improved text:',
-            professional: 'Rewrite the following text in a professional tone. Return only the improved text:',
-            concise: 'Make the following text more concise while preserving the main message. Return only the concise version:'
-        };
-        
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a helpful writing assistant that improves text. Always return only the improved text without explanations or markdown.'
-                    },
-                    {
-                        role: 'user',
-                        content: `${prompts[improvementType]}\n\n${text}`
-                    }
-                ],
-                max_tokens: 1000,
-                temperature: 0.7
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('API request failed');
-        }
-        
-        const data = await response.json();
-        return data.choices[0].message.content.trim();
-    } catch (error) {
-        console.error('OpenAI API error:', error);
-        throw new Error('Failed to improve text with OpenAI. Please check your API key.');
-    }
-}
-
-async function improveWithFreeAI(text, improvementType) {
-    // Client-side text improvement (basic)
-    // This is a fallback when no API key is provided
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            let improved = text;
-            
-            // Basic improvements
-            if (improvementType === 'grammar') {
-                // Fix common grammar issues
-                improved = improved
-                    .replace(/\bi\s/g, 'I ')
-                    .replace(/\bim\b/gi, "I'm")
-                    .replace(/\bdont\b/gi, "don't")
-                    .replace(/\bwont\b/gi, "won't")
-                    .replace(/\bcant\b/gi, "can't")
-                    .replace(/\bisnt\b/gi, "isn't")
-                    .replace(/\bwasnt\b/gi, "wasn't")
-                    .replace(/\bwerent\b/gi, "weren't")
-                    .replace(/\bhavent\b/gi, "haven't")
-                    .replace(/\bhasnt\b/gi, "hasn't")
-                    .replace(/\bhadnt\b/gi, "hadn't")
-                    .replace(/\bwouldnt\b/gi, "wouldn't")
-                    .replace(/\bcouldnt\b/gi, "couldn't")
-                    .replace(/\bshouldnt\b/gi, "shouldn't")
-                    .replace(/\bmustnt\b/gi, "mustn't")
-                    .replace(/\barent\b/gi, "aren't")
-                    .replace(/\bdidnt\b/gi, "didn't")
-                    .replace(/\bdoesnt\b/gi, "doesn't")
-                    .replace(/\bthe\s+the\b/gi, 'the')
-                    .replace(/\ba\s+a\b/gi, 'a')
-                    .replace(/\ban\s+an\b/gi, 'an');
-            } else if (improvementType === 'clarity') {
-                // Add periods where missing, fix spacing
-                improved = improved
-                    .replace(/\s+/g, ' ')
-                    .replace(/\s+([.!?])/g, '$1')
-                    .replace(/([.!?])([A-Z])/g, '$1 $2')
-                    .trim();
-            } else if (improvementType === 'professional') {
-                // Remove casual language, improve tone
-                improved = improved
-                    .replace(/\b(hey|hi|yo)\b/gi, '')
-                    .replace(/\blol\b/gi, '')
-                    .replace(/\bomg\b/gi, '')
-                    .replace(/\b(thanks|thx)\b/gi, 'Thank you')
-                    .replace(/\b(yeah|yep|yup)\b/gi, 'Yes')
-                    .replace(/\b(nope|nah)\b/gi, 'No')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-            } else if (improvementType === 'concise') {
-                // Remove redundant words
-                improved = improved
-                    .replace(/\b(very|really|quite|extremely)\s+/gi, '')
-                    .replace(/\b(in order to|so as to)\b/gi, 'to')
-                    .replace(/\b(due to the fact that|because of the fact that)\b/gi, 'because')
-                    .replace(/\b(at this point in time)\b/gi, 'now')
-                    .replace(/\b(in the event that)\b/gi, 'if')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-            }
-            
-            // Capitalize first letter
-            if (improved.length > 0) {
-                improved = improved.charAt(0).toUpperCase() + improved.slice(1);
-            }
-            
-            resolve(improved || text);
-        }, 500); // Simulate API delay
-    });
-}
-
-if (improveTextBtn) {
-    improveTextBtn.addEventListener('click', async () => {
-        const text = textToImprove ? textToImprove.value.trim() : '';
-        if (!text) {
-            showNotification('Please enter some text to improve', 3000);
-            return;
-        }
-        
-        const selectedType = Array.from(improvementTypeRadios).find(r => r.checked)?.value || 'grammar';
-        
-        // Disable button and show loading
-        improveTextBtn.disabled = true;
-        improveBtnText.style.display = 'none';
-        improveBtnLoader.style.display = 'inline';
-        
-        try {
-            const improvedText = await improveTextWithAI(text, selectedType);
-            
-            if (improvedTextDisplay) {
-                improvedTextDisplay.textContent = improvedText;
-            }
-            if (textOutputSection) {
-                textOutputSection.style.display = 'block';
-            }
-            
-            showNotification('Text improved successfully! ✨', 3000);
-        } catch (error) {
-            showNotification(error.message || 'Failed to improve text. Please try again.', 5000);
-            console.error('Text improvement error:', error);
-        } finally {
-            // Re-enable button
-            improveTextBtn.disabled = false;
-            improveBtnText.style.display = 'inline';
-            improveBtnLoader.style.display = 'none';
-        }
-    });
-}
-
-if (copyImprovedBtn) {
-    copyImprovedBtn.addEventListener('click', () => {
-        const text = improvedTextDisplay ? improvedTextDisplay.textContent : '';
-        if (text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showNotification('Copied to clipboard! 📋', 2000);
-            }).catch(() => {
-                showNotification('Failed to copy', 2000);
-            });
-        }
-    });
-}
-
-if (replaceTextBtn) {
-    replaceTextBtn.addEventListener('click', () => {
-        const text = improvedTextDisplay ? improvedTextDisplay.textContent : '';
-        if (text && textToImprove) {
-            textToImprove.value = text;
-            if (charCount) {
-                charCount.textContent = text.length;
-            }
-            showNotification('Text replaced! 🔄', 2000);
-        }
-    });
-}
-
-if (clearTextBtn) {
-    clearTextBtn.addEventListener('click', () => {
-        if (textToImprove) {
-            textToImprove.value = '';
-        }
-        if (charCount) {
-            charCount.textContent = '0';
-        }
-        if (textOutputSection) {
-            textOutputSection.style.display = 'none';
-        }
-        if (improvedTextDisplay) {
-            improvedTextDisplay.textContent = '';
-        }
-    });
-}
 
 // ==================== FOCUS MODE ====================
 focusModeBtn.addEventListener('click', () => {
@@ -1431,11 +1380,13 @@ async function loadChatMessages() {
 
 async function loadSharedChatMessages() {
     try {
-        // Try to load from API endpoint (if deployed with backend)
+        // Try to load from API endpoint first (for cross-user communication)
         const response = await fetch('/api/chat');
         if (response.ok) {
             const data = await response.json();
-            if (data.messages && data.messages.length > 0) {
+            if (data.messages && Array.isArray(data.messages)) {
+                // Update localStorage with API messages for offline access
+                localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(data.messages));
                 return data.messages;
             }
         }
@@ -1466,32 +1417,40 @@ async function syncChatFromSharedStorage() {
 }
 
 async function saveChatToSharedStorage(messages) {
-    // Save to localStorage
-    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
-    
-    // Broadcast to other tabs
-    if (typeof BroadcastChannel !== 'undefined') {
-        const channel = new BroadcastChannel('fountain-chat');
-        channel.postMessage({ type: 'new-messages', messages: messages });
-    }
-    
-    // Try to save to API (if available)
+    // Try to save to API first (for cross-user communication)
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage && lastMessage.userName && lastMessage.text) {
+    if (lastMessage && lastMessage.userName && (lastMessage.text || lastMessage.image)) {
         try {
-            await fetch('/api/chat', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     userName: lastMessage.userName,
-                    text: lastMessage.text
+                    text: lastMessage.text || '',
+                    image: lastMessage.image || null
                 })
             });
+            
+            // If API save was successful, reload messages from API to get all users' messages
+            if (response.ok) {
+                // Reload from API to get updated messages from all users
+                setTimeout(() => loadChatMessages(), 500);
+            }
         } catch (e) {
-            // API not available, that's okay - localStorage will work
+            // API not available, continue with localStorage
+            console.log('API not available, using localStorage');
         }
+    }
+    
+    // Also save to localStorage for offline access
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+    
+    // Broadcast to other tabs
+    if (typeof BroadcastChannel !== 'undefined') {
+        const channel = new BroadcastChannel('fountain-chat');
+        channel.postMessage({ type: 'new-messages', messages: messages });
     }
 }
 
@@ -1513,7 +1472,40 @@ function displayChatMessage(message) {
     
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
-    bubble.textContent = message.text;
+    
+    // Add image if present
+    if (message.image) {
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'message-image-container';
+        const img = document.createElement('img');
+        img.src = message.image;
+        img.className = 'message-image';
+        img.alt = 'Uploaded image';
+        img.loading = 'lazy';
+        // Make image clickable to view full size
+        img.style.cursor = 'pointer';
+        img.addEventListener('click', () => {
+            const fullScreen = document.createElement('div');
+            fullScreen.className = 'image-fullscreen';
+            fullScreen.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+            const fullImg = document.createElement('img');
+            fullImg.src = message.image;
+            fullImg.style.cssText = 'max-width: 90%; max-height: 90%; object-fit: contain;';
+            fullScreen.appendChild(fullImg);
+            fullScreen.addEventListener('click', () => fullScreen.remove());
+            document.body.appendChild(fullScreen);
+        });
+        imgContainer.appendChild(img);
+        bubble.appendChild(imgContainer);
+    }
+    
+    // Add text if present
+    if (message.text) {
+        const textDiv = document.createElement('div');
+        textDiv.className = 'message-text';
+        textDiv.textContent = message.text;
+        bubble.appendChild(textDiv);
+    }
     
     const meta = document.createElement('div');
     meta.className = 'message-meta';
@@ -1546,8 +1538,11 @@ function formatChatTime(timestamp) {
 }
 
 async function sendChatMessage() {
-    const text = chatInput.value.trim();
-    if (!text) return;
+    const text = chatInput ? chatInput.value.trim() : '';
+    const imageData = previewImage && previewImage.src && previewImage.src.startsWith('data:') ? previewImage.src : null;
+    
+    // Require either text or image
+    if (!text && !imageData) return;
     
     if (!chatUserName) {
         showNotification('Please set a username first', 3000);
@@ -1558,7 +1553,8 @@ async function sendChatMessage() {
     const message = {
         id: Date.now() + Math.random(),
         userName: chatUserName,
-        text: text,
+        text: text || '',
+        image: imageData || null,
         timestamp: Date.now()
     };
     
@@ -1576,6 +1572,9 @@ async function sendChatMessage() {
     await saveChatToSharedStorage(messages);
     chatMessagesData = messages;
     chatInput.value = '';
+    
+    // Clear image preview
+    clearImagePreview();
     
     // Reload messages to show the new one
     loadChatMessages();
@@ -1671,6 +1670,56 @@ chatInput.addEventListener('keypress', (e) => {
         sendChatMessage();
     }
 });
+
+// File upload functionality
+if (uploadFileBtn && chatFileInput) {
+    uploadFileBtn.addEventListener('click', () => {
+        chatFileInput.click();
+    });
+
+    chatFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('Please select an image file', 3000);
+                chatFileInput.value = '';
+                return;
+            }
+            
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('Image size must be less than 5MB', 3000);
+                chatFileInput.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (previewImage && imagePreview) {
+                    previewImage.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                }
+            };
+            reader.onerror = () => {
+                showNotification('Error reading image file', 3000);
+                chatFileInput.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (removePreviewBtn) {
+    removePreviewBtn.addEventListener('click', () => {
+        clearImagePreview();
+    });
+}
+
+function clearImagePreview() {
+    if (previewImage) previewImage.src = '';
+    if (imagePreview) imagePreview.style.display = 'none';
+    if (chatFileInput) chatFileInput.value = '';
+}
 
 // ==================== START APPLICATION ====================
 window.addEventListener('load', () => {

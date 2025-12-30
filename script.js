@@ -120,32 +120,66 @@ let lastMessageCount = 0;
 let lastMessageIds = new Set();
 
 
-// Music playlists - Using AI-generated music
-// All music is generated programmatically using Web Audio API
+// Music playlists - Real music tracks from reliable sources
+// Using SoundHelix (generates music on-the-fly) and Archive.org (public domain)
 const playlists = {
     lofi: {
         name: 'Lo-Fi Hip Hop',
-        type: 'lofi'
+        tracks: [
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
+        ]
     },
     classical: {
         name: 'Classical',
-        type: 'classical'
+        tracks: [
+            'https://archive.org/download/BachJS_BWV1007_Cello_Suite_1/01_Prelude.mp3',
+            'https://archive.org/download/BachJS_BWV1007_Cello_Suite_1/02_Allemande.mp3',
+            'https://archive.org/download/BachJS_BWV1007_Cello_Suite_1/03_Courante.mp3',
+            'https://archive.org/download/BachJS_BWV1007_Cello_Suite_1/04_Sarabande.mp3',
+            'https://archive.org/download/BachJS_BWV1007_Cello_Suite_1/05_Menuet_I.mp3',
+            'https://archive.org/download/BachJS_BWV1007_Cello_Suite_1/06_Menuet_II.mp3',
+            'https://archive.org/download/BachJS_BWV1007_Cello_Suite_1/07_Gigue.mp3'
+        ]
     },
     jazz: {
         name: 'Jazz',
-        type: 'jazz'
+        tracks: [
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'
+        ]
     },
     ambient: {
         name: 'Ambient',
-        type: 'ambient'
+        tracks: [
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'
+        ]
     },
     piano: {
         name: 'Piano',
-        type: 'piano'
+        tracks: [
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3'
+        ]
     },
     nature: {
         name: 'Nature Sounds',
-        type: 'nature'
+        tracks: [
+            'https://archive.org/download/nature-sounds-rain/rain.mp3',
+            'https://archive.org/download/nature-sounds-ocean/ocean.mp3',
+            'https://archive.org/download/nature-sounds-forest/forest.mp3',
+            'https://archive.org/download/nature-sounds-birds/birds.mp3'
+        ]
     },
     custom: {
         name: 'My Music',
@@ -154,12 +188,6 @@ const playlists = {
 };
 
 let currentTrackIndex = 0;
-
-// AI Music Generator
-let musicAudioContext = null;
-let musicOscillators = [];
-let musicGainNodes = [];
-let isMusicPlaying = false;
 
 // User uploaded music storage
 const USER_MUSIC_KEY = 'fountain-user-music';
@@ -346,300 +374,46 @@ function init() {
 // ==================== MUSIC CONTROLS ====================
 function loadPlaylist(playlistKey) {
     const playlist = playlists[playlistKey];
-    if (!playlist) return;
-    
-    // Stop any currently playing generated music
-    stopGeneratedMusic();
+    if (!playlist || !audio) return;
     
     // If custom playlist and no tracks, show message
-    if (playlistKey === 'custom') {
-        if (!playlist.tracks || playlist.tracks.length === 0) {
-            if (trackName) trackName.textContent = 'No music uploaded yet. Click "Upload Music" to add tracks!';
-            if (audio) audio.src = '';
-            if (playIcon) playIcon.textContent = '▶';
-            return;
-        }
-        
-        // Play uploaded music
-        currentTrackIndex = 0;
-        if (trackName) trackName.textContent = playlist.name;
-        const trackUrl = playlist.tracks[currentTrackIndex];
-        if (audio) {
-            audio.src = trackUrl;
-            audio.load();
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        if (playIcon) playIcon.textContent = '⏸';
-                    })
-                    .catch(() => {
-                        if (playIcon) playIcon.textContent = '▶';
-                    });
-            }
-        }
+    if (playlistKey === 'custom' && (!playlist.tracks || playlist.tracks.length === 0)) {
+        if (trackName) trackName.textContent = 'No music uploaded yet. Click "Upload Music" to add tracks!';
+        audio.src = '';
+        if (playIcon) playIcon.textContent = '▶';
         return;
     }
     
-    // Generate AI music for other playlists
+    if (!playlist.tracks || playlist.tracks.length === 0) {
+        if (trackName) trackName.textContent = playlist.name + ' (No tracks available)';
+        audio.src = '';
+        if (playIcon) playIcon.textContent = '▶';
+        return;
+    }
+    
+    currentTrackIndex = 0;
     if (trackName) trackName.textContent = playlist.name;
-    generateAIMusic(playlist.type);
+    const trackUrl = playlist.tracks[currentTrackIndex];
     
-    if (playIcon) playIcon.textContent = '⏸';
-    isMusicPlaying = true;
-}
-
-function stopGeneratedMusic() {
-    // Stop all oscillators
-    musicOscillators.forEach(osc => {
-        try {
-            osc.stop();
-            osc.disconnect();
-        } catch (e) {}
-    });
-    musicOscillators = [];
-    musicGainNodes = [];
-    isMusicPlaying = false;
-}
-
-function generateAIMusic(type) {
-    // Initialize audio context if needed
-    if (!musicAudioContext) {
-        musicAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    audio.src = trackUrl;
+    audio.load();
     
-    // Resume context if suspended
-    if (musicAudioContext.state === 'suspended') {
-        musicAudioContext.resume();
-    }
-    
-    const volume = volumeSlider ? volumeSlider.value / 100 : 0.5;
-    
-    switch(type) {
-        case 'lofi':
-            generateLoFiMusic(volume);
-            break;
-        case 'classical':
-            generateClassicalMusic(volume);
-            break;
-        case 'jazz':
-            generateJazzMusic(volume);
-            break;
-        case 'ambient':
-            generateAmbientMusic(volume);
-            break;
-        case 'piano':
-            generatePianoMusic(volume);
-            break;
-        case 'nature':
-            generateNatureMusic(volume);
-            break;
-        default:
-            generateLoFiMusic(volume);
+    // Try to play automatically
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                if (playIcon) playIcon.textContent = '⏸';
+            })
+            .catch((error) => {
+                console.error('Playback failed:', error);
+                if (playIcon) playIcon.textContent = '▶';
+                showNotification('Unable to play music. Some tracks may require user interaction first.', 3000);
+            });
     }
 }
 
-function generateLoFiMusic(volume) {
-    const masterGain = musicAudioContext.createGain();
-    masterGain.gain.value = volume;
-    masterGain.connect(musicAudioContext.destination);
-    musicGainNodes.push(masterGain);
-    
-    // Lo-Fi: Warm, mellow tones with subtle beats
-    // Bass line
-    const bass = musicAudioContext.createOscillator();
-    const bassGain = musicAudioContext.createGain();
-    bass.type = 'sawtooth';
-    bass.frequency.value = 80;
-    bassGain.gain.value = 0.3 * volume;
-    bass.connect(bassGain);
-    bassGain.connect(masterGain);
-    bass.start();
-    musicOscillators.push(bass);
-    
-    // Melody (multiple oscillators for richness)
-    for (let i = 0; i < 3; i++) {
-        const osc = musicAudioContext.createOscillator();
-        const gain = musicAudioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = 200 + i * 100 + Math.sin(Date.now() / 1000) * 20;
-        gain.gain.value = 0.2 * volume;
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start();
-        musicOscillators.push(osc);
-        
-        // Add subtle vibrato
-        const lfo = musicAudioContext.createOscillator();
-        const lfoGain = musicAudioContext.createGain();
-        lfo.frequency.value = 2 + Math.random() * 3;
-        lfoGain.gain.value = 5;
-        lfo.connect(lfoGain);
-        lfoGain.connect(osc.frequency);
-        lfo.start();
-        musicOscillators.push(lfo);
-    }
-    
-    // Hi-hats (high frequency noise)
-    const noise = musicAudioContext.createBufferSource();
-    const noiseBuffer = musicAudioContext.createBuffer(1, musicAudioContext.sampleRate * 0.1, musicAudioContext.sampleRate);
-    const noiseData = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < noiseData.length; i++) {
-        noiseData[i] = Math.random() * 2 - 1;
-    }
-    const noiseGain = musicAudioContext.createGain();
-    noise.buffer = noiseBuffer;
-    noise.loop = true;
-    noiseGain.gain.value = 0.05 * volume;
-    noise.connect(noiseGain);
-    noiseGain.connect(masterGain);
-    noise.start();
-    musicOscillators.push(noise);
-}
-
-function generateClassicalMusic(volume) {
-    const masterGain = musicAudioContext.createGain();
-    masterGain.gain.value = volume;
-    masterGain.connect(musicAudioContext.destination);
-    musicGainNodes.push(masterGain);
-    
-    // Classical: Harmonic, flowing melodies
-    const frequencies = [261.63, 329.63, 392.00, 523.25, 659.25]; // C major scale
-    frequencies.forEach((freq, i) => {
-        const osc = musicAudioContext.createOscillator();
-        const gain = musicAudioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        gain.gain.value = (0.15 / frequencies.length) * volume;
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start();
-        musicOscillators.push(osc);
-        
-        // Add slow modulation for flowing effect
-        const lfo = musicAudioContext.createOscillator();
-        const lfoGain = musicAudioContext.createGain();
-        lfo.frequency.value = 0.5 + i * 0.1;
-        lfoGain.gain.value = 2;
-        lfo.connect(lfoGain);
-        lfoGain.connect(osc.frequency);
-        lfo.start();
-        musicOscillators.push(lfo);
-    });
-}
-
-function generateJazzMusic(volume) {
-    const masterGain = musicAudioContext.createGain();
-    masterGain.gain.value = volume;
-    masterGain.connect(musicAudioContext.destination);
-    musicGainNodes.push(masterGain);
-    
-    // Jazz: Complex harmonies with swing
-    const jazzChords = [
-        [261.63, 329.63, 392.00], // C major
-        [293.66, 349.23, 440.00], // D minor
-        [329.63, 392.00, 493.88], // E minor
-        [261.63, 329.63, 392.00]  // C major
-    ];
-    
-    jazzChords.forEach((chord, chordIndex) => {
-        chord.forEach((freq, noteIndex) => {
-            const osc = musicAudioContext.createOscillator();
-            const gain = musicAudioContext.createGain();
-            osc.type = 'triangle';
-            osc.frequency.value = freq;
-            gain.gain.value = 0.2 * volume;
-            osc.connect(gain);
-            gain.connect(masterGain);
-            osc.start();
-            musicOscillators.push(osc);
-        });
-    });
-}
-
-function generateAmbientMusic(volume) {
-    const masterGain = musicAudioContext.createGain();
-    masterGain.gain.value = volume;
-    masterGain.connect(musicAudioContext.destination);
-    musicGainNodes.push(masterGain);
-    
-    // Ambient: Ethereal, evolving textures
-    for (let i = 0; i < 5; i++) {
-        const osc = musicAudioContext.createOscillator();
-        const gain = musicAudioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = 150 + i * 50 + Math.random() * 30;
-        gain.gain.value = 0.15 * volume;
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start();
-        musicOscillators.push(osc);
-        
-        // Slow frequency modulation
-        const lfo = musicAudioContext.createOscillator();
-        const lfoGain = musicAudioContext.createGain();
-        lfo.frequency.value = 0.1 + Math.random() * 0.2;
-        lfoGain.gain.value = 10 + Math.random() * 10;
-        lfo.connect(lfoGain);
-        lfoGain.connect(osc.frequency);
-        lfo.start();
-        musicOscillators.push(lfo);
-    }
-}
-
-function generatePianoMusic(volume) {
-    const masterGain = musicAudioContext.createGain();
-    masterGain.gain.value = volume;
-    masterGain.connect(musicAudioContext.destination);
-    musicGainNodes.push(masterGain);
-    
-    // Piano: Clear, distinct notes
-    const pianoNotes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
-    pianoNotes.forEach((freq, i) => {
-        const osc = musicAudioContext.createOscillator();
-        const gain = musicAudioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        gain.gain.value = 0.12 * volume;
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start();
-        musicOscillators.push(osc);
-    });
-}
-
-function generateNatureMusic(volume) {
-    const masterGain = musicAudioContext.createGain();
-    masterGain.gain.value = volume;
-    masterGain.connect(musicAudioContext.destination);
-    musicGainNodes.push(masterGain);
-    
-    // Nature: Soothing, organic sounds
-    // Water-like sounds
-    for (let i = 0; i < 4; i++) {
-        const osc = musicAudioContext.createOscillator();
-        const gain = musicAudioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = 200 + i * 80 + Math.random() * 40;
-        gain.gain.value = 0.18 * volume;
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start();
-        musicOscillators.push(osc);
-        
-        // Slow, natural modulation
-        const lfo = musicAudioContext.createOscillator();
-        const lfoGain = musicAudioContext.createGain();
-        lfo.frequency.value = 0.3 + Math.random() * 0.5;
-        lfoGain.gain.value = 15 + Math.random() * 10;
-        lfo.connect(lfoGain);
-        lfoGain.connect(osc.frequency);
-        lfo.start();
-        musicOscillators.push(lfo);
-    }
-}
-
-// Play next track when current ends (only for custom uploaded music)
+// Play next track when current ends
 if (audio) {
     audio.addEventListener('ended', () => {
         const currentPlaylist = playlistSelect ? playlistSelect.value : 'lofi';
@@ -656,10 +430,9 @@ if (audio) {
 // Playlist selection
 if (playlistSelect) {
     playlistSelect.addEventListener('change', (e) => {
-        const wasPlaying = isMusicPlaying || (audio && !audio.paused);
+        const wasPlaying = audio && !audio.paused;
         loadPlaylist(e.target.value);
-        // For custom music, try to resume if it was playing
-        if (wasPlaying && e.target.value === 'custom' && audio && audio.src) {
+        if (wasPlaying) {
             setTimeout(() => {
                 audio.play().catch(() => {});
             }, 100);
@@ -670,41 +443,26 @@ if (playlistSelect) {
 // Play/Pause button
 if (playPauseBtn) {
     playPauseBtn.addEventListener('click', () => {
-        const currentPlaylist = playlistSelect ? playlistSelect.value : 'lofi';
-        const playlist = playlists[currentPlaylist];
-        
-        // Handle custom uploaded music
-        if (currentPlaylist === 'custom' && playlist.tracks && playlist.tracks.length > 0) {
-            if (!audio.src) {
-                loadPlaylist('custom');
-                return;
-            }
-            
-            if (audio.paused) {
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise
-                        .then(() => {
-                            if (playIcon) playIcon.textContent = '⏸';
-                        })
-                        .catch(error => {
-                            console.error('Playback failed:', error);
-                            showNotification('Unable to play music. Please check your browser settings.', 3000);
-                        });
-                }
-            } else {
-                audio.pause();
-                if (playIcon) playIcon.textContent = '▶';
-            }
+        if (!audio.src) {
+            loadPlaylist(playlistSelect ? playlistSelect.value : 'lofi');
             return;
         }
         
-        // Handle AI-generated music
-        if (isMusicPlaying) {
-            stopGeneratedMusic();
-            if (playIcon) playIcon.textContent = '▶';
+        if (audio.paused) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        if (playIcon) playIcon.textContent = '⏸';
+                    })
+                    .catch(error => {
+                        console.error('Playback failed:', error);
+                        showNotification('Unable to play music. Please check your browser settings.', 3000);
+                    });
+            }
         } else {
-            loadPlaylist(currentPlaylist);
+            audio.pause();
+            if (playIcon) playIcon.textContent = '▶';
         }
     });
 }
@@ -712,12 +470,7 @@ if (playPauseBtn) {
 // Volume control
 if (volumeSlider) {
     volumeSlider.addEventListener('input', (e) => {
-        const volume = e.target.value / 100;
-        if (audio) audio.volume = volume;
-        // Update generated music volume
-        musicGainNodes.forEach(gain => {
-            gain.gain.value = volume;
-        });
+        if (audio) audio.volume = e.target.value / 100;
     });
 }
 

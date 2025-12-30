@@ -518,7 +518,7 @@ h1 {
     flex-wrap: wrap;
 }
 
-.upload-music-btn, .manage-music-btn, .youtube-search-btn {
+.upload-music-btn, .manage-music-btn {
     padding: 8px 15px;
     border: 2px solid var(--primary-color);
     border-radius: 20px;
@@ -530,7 +530,7 @@ h1 {
     white-space: nowrap;
 }
 
-.upload-music-btn:hover, .manage-music-btn:hover, .youtube-search-btn:hover {
+.upload-music-btn:hover, .manage-music-btn:hover {
     background: var(--primary-color);
     color: white;
     transform: translateY(-2px);

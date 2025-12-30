@@ -7,7 +7,6 @@
     <title>Fountain - Work Room</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
     <!-- Settings Panel -->
@@ -166,9 +165,7 @@
                                 <option value="piano">Piano</option>
                                 <option value="nature">Nature Sounds</option>
                                 <option value="custom">My Music</option>
-                                <option value="youtube">YouTube</option>
                             </select>
-                            <button id="youtubeSearchBtn" class="youtube-search-btn" title="Search YouTube">🔍 YouTube</button>
                             <button id="uploadMusicBtn" class="upload-music-btn" title="Upload your own music">📤 Upload Music</button>
                             <button id="manageMusicBtn" class="manage-music-btn" title="Manage uploaded music">🎼 My Music</button>
                         </div>
@@ -223,28 +220,6 @@
                     </div>
                 </div>
 
-                <!-- YouTube Search Modal -->
-                <div class="music-modal" id="youtubeSearchModal">
-                    <div class="music-modal-content youtube-modal-content">
-                        <div class="music-modal-header">
-                            <h3>🔍 Search YouTube</h3>
-                            <button class="close-music-modal" id="closeYoutubeModal">×</button>
-                        </div>
-                        <div class="youtube-search-container">
-                            <div class="youtube-search-box">
-                                <input type="text" id="youtubeSearchInput" placeholder="Search for music, study sounds, or any audio..." class="youtube-search-input">
-                                <button id="youtubeSearchButton" class="youtube-search-submit">Search</button>
-                            </div>
-                            <div id="youtubeResults" class="youtube-results"></div>
-                        </div>
-                        <div id="youtubePlayerContainer" class="youtube-player-container" style="display: none;">
-                            <div id="youtubePlayer"></div>
-                            <div class="youtube-player-info">
-                                <p id="youtubeNowPlaying">Now playing: <span id="youtubeVideoTitle"></span></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Task List -->

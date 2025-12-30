@@ -18,24 +18,15 @@ const playlistSelect = document.getElementById('playlistSelect');
 const trackName = document.getElementById('trackName');
 const uploadMusicBtn = document.getElementById('uploadMusicBtn');
 const manageMusicBtn = document.getElementById('manageMusicBtn');
-const youtubeSearchBtn = document.getElementById('youtubeSearchBtn');
 const musicFileInput = document.getElementById('musicFileInput');
 const musicUploadInput = document.getElementById('musicUploadInput');
 const musicUploadModal = document.getElementById('musicUploadModal');
 const manageMusicModal = document.getElementById('manageMusicModal');
-const youtubeSearchModal = document.getElementById('youtubeSearchModal');
 const closeMusicModal = document.getElementById('closeMusicModal');
 const closeManageModal = document.getElementById('closeManageModal');
-const closeYoutubeModal = document.getElementById('closeYoutubeModal');
 const uploadDropzone = document.getElementById('uploadDropzone');
 const uploadedFilesList = document.getElementById('uploadedFilesList');
 const myMusicList = document.getElementById('myMusicList');
-const youtubeSearchInput = document.getElementById('youtubeSearchInput');
-const youtubeSearchButton = document.getElementById('youtubeSearchButton');
-const youtubeResults = document.getElementById('youtubeResults');
-const youtubePlayerContainer = document.getElementById('youtubePlayerContainer');
-const youtubePlayer = document.getElementById('youtubePlayer');
-const youtubeVideoTitle = document.getElementById('youtubeVideoTitle');
 
 const quoteText = document.getElementById('quoteText');
 const quoteAuthor = document.getElementById('quoteAuthor');
@@ -129,45 +120,32 @@ let lastMessageCount = 0;
 let lastMessageIds = new Set();
 
 
-// Music playlists - Add your own music URLs here
-// Free music sources: freemusicarchive.org, incompetech.com, bensound.com
-// For best results, host your music files and use those URLs
+// Music playlists - Using AI-generated music
+// All music is generated programmatically using Web Audio API
 const playlists = {
     lofi: {
         name: 'Lo-Fi Hip Hop',
-        tracks: [
-            // Add your music URLs here, e.g.:
-            // 'https://your-domain.com/music/lofi1.mp3',
-            // 'https://your-domain.com/music/lofi2.mp3'
-        ]
+        type: 'lofi'
     },
     classical: {
         name: 'Classical',
-        tracks: [
-            // Add your music URLs here
-        ]
+        type: 'classical'
     },
     jazz: {
         name: 'Jazz',
-        tracks: [
-            // Add your music URLs here
-        ]
+        type: 'jazz'
     },
     ambient: {
         name: 'Ambient',
-        tracks: [
-            // Add your music URLs here
-        ]
+        type: 'ambient'
     },
     piano: {
         name: 'Piano',
-        tracks: [
-            // Add your music URLs here
-        ]
+        type: 'piano'
     },
     nature: {
         name: 'Nature Sounds',
-        tracks: []
+        type: 'nature'
     },
     custom: {
         name: 'My Music',
@@ -177,9 +155,11 @@ const playlists = {
 
 let currentTrackIndex = 0;
 
-// YouTube player variables
-let youtubePlayerInstance = null;
-let currentYoutubeVideoId = null;
+// AI Music Generator
+let musicAudioContext = null;
+let musicOscillators = [];
+let musicGainNodes = [];
+let isMusicPlaying = false;
 
 // User uploaded music storage
 const USER_MUSIC_KEY = 'fountain-user-music';
@@ -366,49 +346,305 @@ function init() {
 // ==================== MUSIC CONTROLS ====================
 function loadPlaylist(playlistKey) {
     const playlist = playlists[playlistKey];
-    if (!playlist || !audio) return;
+    if (!playlist) return;
+    
+    // Stop any currently playing generated music
+    stopGeneratedMusic();
     
     // If custom playlist and no tracks, show message
-    if (playlistKey === 'custom' && (!playlist.tracks || playlist.tracks.length === 0)) {
-        if (trackName) trackName.textContent = 'No music uploaded yet. Click "Upload Music" to add tracks!';
-        audio.src = '';
-        if (playIcon) playIcon.textContent = '▶';
+    if (playlistKey === 'custom') {
+        if (!playlist.tracks || playlist.tracks.length === 0) {
+            if (trackName) trackName.textContent = 'No music uploaded yet. Click "Upload Music" to add tracks!';
+            if (audio) audio.src = '';
+            if (playIcon) playIcon.textContent = '▶';
+            return;
+        }
+        
+        // Play uploaded music
+        currentTrackIndex = 0;
+        if (trackName) trackName.textContent = playlist.name;
+        const trackUrl = playlist.tracks[currentTrackIndex];
+        if (audio) {
+            audio.src = trackUrl;
+            audio.load();
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        if (playIcon) playIcon.textContent = '⏸';
+                    })
+                    .catch(() => {
+                        if (playIcon) playIcon.textContent = '▶';
+                    });
+            }
+        }
         return;
     }
     
-    if (!playlist.tracks || playlist.tracks.length === 0) {
-        if (trackName) trackName.textContent = playlist.name + ' (No tracks available)';
-        audio.src = '';
-        if (playIcon) playIcon.textContent = '▶';
-        return;
-    }
-    
-    currentTrackIndex = 0;
+    // Generate AI music for other playlists
     if (trackName) trackName.textContent = playlist.name;
-    const trackUrl = playlist.tracks[currentTrackIndex];
+    generateAIMusic(playlist.type);
     
-    audio.src = trackUrl;
-    audio.load();
+    if (playIcon) playIcon.textContent = '⏸';
+    isMusicPlaying = true;
+}
+
+function stopGeneratedMusic() {
+    // Stop all oscillators
+    musicOscillators.forEach(osc => {
+        try {
+            osc.stop();
+            osc.disconnect();
+        } catch (e) {}
+    });
+    musicOscillators = [];
+    musicGainNodes = [];
+    isMusicPlaying = false;
+}
+
+function generateAIMusic(type) {
+    // Initialize audio context if needed
+    if (!musicAudioContext) {
+        musicAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
     
-    // Try to play automatically
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-        playPromise
-            .then(() => {
-                if (playIcon) playIcon.textContent = '⏸';
-            })
-            .catch(() => {
-                if (playIcon) playIcon.textContent = '▶';
-            });
+    // Resume context if suspended
+    if (musicAudioContext.state === 'suspended') {
+        musicAudioContext.resume();
+    }
+    
+    const volume = volumeSlider ? volumeSlider.value / 100 : 0.5;
+    
+    switch(type) {
+        case 'lofi':
+            generateLoFiMusic(volume);
+            break;
+        case 'classical':
+            generateClassicalMusic(volume);
+            break;
+        case 'jazz':
+            generateJazzMusic(volume);
+            break;
+        case 'ambient':
+            generateAmbientMusic(volume);
+            break;
+        case 'piano':
+            generatePianoMusic(volume);
+            break;
+        case 'nature':
+            generateNatureMusic(volume);
+            break;
+        default:
+            generateLoFiMusic(volume);
     }
 }
 
-// Play next track when current ends
+function generateLoFiMusic(volume) {
+    const masterGain = musicAudioContext.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(musicAudioContext.destination);
+    musicGainNodes.push(masterGain);
+    
+    // Lo-Fi: Warm, mellow tones with subtle beats
+    // Bass line
+    const bass = musicAudioContext.createOscillator();
+    const bassGain = musicAudioContext.createGain();
+    bass.type = 'sawtooth';
+    bass.frequency.value = 80;
+    bassGain.gain.value = 0.3 * volume;
+    bass.connect(bassGain);
+    bassGain.connect(masterGain);
+    bass.start();
+    musicOscillators.push(bass);
+    
+    // Melody (multiple oscillators for richness)
+    for (let i = 0; i < 3; i++) {
+        const osc = musicAudioContext.createOscillator();
+        const gain = musicAudioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 200 + i * 100 + Math.sin(Date.now() / 1000) * 20;
+        gain.gain.value = 0.2 * volume;
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        musicOscillators.push(osc);
+        
+        // Add subtle vibrato
+        const lfo = musicAudioContext.createOscillator();
+        const lfoGain = musicAudioContext.createGain();
+        lfo.frequency.value = 2 + Math.random() * 3;
+        lfoGain.gain.value = 5;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfo.start();
+        musicOscillators.push(lfo);
+    }
+    
+    // Hi-hats (high frequency noise)
+    const noise = musicAudioContext.createBufferSource();
+    const noiseBuffer = musicAudioContext.createBuffer(1, musicAudioContext.sampleRate * 0.1, musicAudioContext.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseData.length; i++) {
+        noiseData[i] = Math.random() * 2 - 1;
+    }
+    const noiseGain = musicAudioContext.createGain();
+    noise.buffer = noiseBuffer;
+    noise.loop = true;
+    noiseGain.gain.value = 0.05 * volume;
+    noise.connect(noiseGain);
+    noiseGain.connect(masterGain);
+    noise.start();
+    musicOscillators.push(noise);
+}
+
+function generateClassicalMusic(volume) {
+    const masterGain = musicAudioContext.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(musicAudioContext.destination);
+    musicGainNodes.push(masterGain);
+    
+    // Classical: Harmonic, flowing melodies
+    const frequencies = [261.63, 329.63, 392.00, 523.25, 659.25]; // C major scale
+    frequencies.forEach((freq, i) => {
+        const osc = musicAudioContext.createOscillator();
+        const gain = musicAudioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.value = (0.15 / frequencies.length) * volume;
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        musicOscillators.push(osc);
+        
+        // Add slow modulation for flowing effect
+        const lfo = musicAudioContext.createOscillator();
+        const lfoGain = musicAudioContext.createGain();
+        lfo.frequency.value = 0.5 + i * 0.1;
+        lfoGain.gain.value = 2;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfo.start();
+        musicOscillators.push(lfo);
+    });
+}
+
+function generateJazzMusic(volume) {
+    const masterGain = musicAudioContext.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(musicAudioContext.destination);
+    musicGainNodes.push(masterGain);
+    
+    // Jazz: Complex harmonies with swing
+    const jazzChords = [
+        [261.63, 329.63, 392.00], // C major
+        [293.66, 349.23, 440.00], // D minor
+        [329.63, 392.00, 493.88], // E minor
+        [261.63, 329.63, 392.00]  // C major
+    ];
+    
+    jazzChords.forEach((chord, chordIndex) => {
+        chord.forEach((freq, noteIndex) => {
+            const osc = musicAudioContext.createOscillator();
+            const gain = musicAudioContext.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            gain.gain.value = 0.2 * volume;
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start();
+            musicOscillators.push(osc);
+        });
+    });
+}
+
+function generateAmbientMusic(volume) {
+    const masterGain = musicAudioContext.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(musicAudioContext.destination);
+    musicGainNodes.push(masterGain);
+    
+    // Ambient: Ethereal, evolving textures
+    for (let i = 0; i < 5; i++) {
+        const osc = musicAudioContext.createOscillator();
+        const gain = musicAudioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 150 + i * 50 + Math.random() * 30;
+        gain.gain.value = 0.15 * volume;
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        musicOscillators.push(osc);
+        
+        // Slow frequency modulation
+        const lfo = musicAudioContext.createOscillator();
+        const lfoGain = musicAudioContext.createGain();
+        lfo.frequency.value = 0.1 + Math.random() * 0.2;
+        lfoGain.gain.value = 10 + Math.random() * 10;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfo.start();
+        musicOscillators.push(lfo);
+    }
+}
+
+function generatePianoMusic(volume) {
+    const masterGain = musicAudioContext.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(musicAudioContext.destination);
+    musicGainNodes.push(masterGain);
+    
+    // Piano: Clear, distinct notes
+    const pianoNotes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+    pianoNotes.forEach((freq, i) => {
+        const osc = musicAudioContext.createOscillator();
+        const gain = musicAudioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.value = 0.12 * volume;
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        musicOscillators.push(osc);
+    });
+}
+
+function generateNatureMusic(volume) {
+    const masterGain = musicAudioContext.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(musicAudioContext.destination);
+    musicGainNodes.push(masterGain);
+    
+    // Nature: Soothing, organic sounds
+    // Water-like sounds
+    for (let i = 0; i < 4; i++) {
+        const osc = musicAudioContext.createOscillator();
+        const gain = musicAudioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 200 + i * 80 + Math.random() * 40;
+        gain.gain.value = 0.18 * volume;
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        musicOscillators.push(osc);
+        
+        // Slow, natural modulation
+        const lfo = musicAudioContext.createOscillator();
+        const lfoGain = musicAudioContext.createGain();
+        lfo.frequency.value = 0.3 + Math.random() * 0.5;
+        lfoGain.gain.value = 15 + Math.random() * 10;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfo.start();
+        musicOscillators.push(lfo);
+    }
+}
+
+// Play next track when current ends (only for custom uploaded music)
 if (audio) {
     audio.addEventListener('ended', () => {
         const currentPlaylist = playlistSelect ? playlistSelect.value : 'lofi';
         const playlist = playlists[currentPlaylist];
-        if (playlist && playlist.tracks.length > 0) {
+        if (playlist && playlist.tracks && playlist.tracks.length > 0) {
             currentTrackIndex = (currentTrackIndex + 1) % playlist.tracks.length;
             audio.src = playlist.tracks[currentTrackIndex];
             audio.load();
@@ -420,9 +656,10 @@ if (audio) {
 // Playlist selection
 if (playlistSelect) {
     playlistSelect.addEventListener('change', (e) => {
-        const wasPlaying = !audio.paused;
+        const wasPlaying = isMusicPlaying || (audio && !audio.paused);
         loadPlaylist(e.target.value);
-        if (wasPlaying) {
+        // For custom music, try to resume if it was playing
+        if (wasPlaying && e.target.value === 'custom' && audio && audio.src) {
             setTimeout(() => {
                 audio.play().catch(() => {});
             }, 100);
@@ -433,26 +670,41 @@ if (playlistSelect) {
 // Play/Pause button
 if (playPauseBtn) {
     playPauseBtn.addEventListener('click', () => {
-        if (!audio.src) {
-            loadPlaylist(playlistSelect ? playlistSelect.value : 'lofi');
+        const currentPlaylist = playlistSelect ? playlistSelect.value : 'lofi';
+        const playlist = playlists[currentPlaylist];
+        
+        // Handle custom uploaded music
+        if (currentPlaylist === 'custom' && playlist.tracks && playlist.tracks.length > 0) {
+            if (!audio.src) {
+                loadPlaylist('custom');
+                return;
+            }
+            
+            if (audio.paused) {
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            if (playIcon) playIcon.textContent = '⏸';
+                        })
+                        .catch(error => {
+                            console.error('Playback failed:', error);
+                            showNotification('Unable to play music. Please check your browser settings.', 3000);
+                        });
+                }
+            } else {
+                audio.pause();
+                if (playIcon) playIcon.textContent = '▶';
+            }
             return;
         }
         
-        if (audio.paused) {
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        if (playIcon) playIcon.textContent = '⏸';
-                    })
-                    .catch(error => {
-                        console.error('Playback failed:', error);
-                        showNotification('Unable to play music. Please check your browser settings.', 3000);
-                    });
-            }
-        } else {
-            audio.pause();
+        // Handle AI-generated music
+        if (isMusicPlaying) {
+            stopGeneratedMusic();
             if (playIcon) playIcon.textContent = '▶';
+        } else {
+            loadPlaylist(currentPlaylist);
         }
     });
 }
@@ -460,7 +712,12 @@ if (playPauseBtn) {
 // Volume control
 if (volumeSlider) {
     volumeSlider.addEventListener('input', (e) => {
-        if (audio) audio.volume = e.target.value / 100;
+        const volume = e.target.value / 100;
+        if (audio) audio.volume = volume;
+        // Update generated music volume
+        musicGainNodes.forEach(gain => {
+            gain.gain.value = volume;
+        });
     });
 }
 
@@ -1767,237 +2024,11 @@ function processMusicFiles(files) {
     });
 }
 
-// ==================== YOUTUBE INTEGRATION ====================
-if (youtubeSearchBtn) {
-    youtubeSearchBtn.addEventListener('click', () => {
-        if (youtubeSearchModal) youtubeSearchModal.classList.add('active');
-        if (youtubeSearchInput) {
-            setTimeout(() => youtubeSearchInput.focus(), 100);
-        }
-    });
-}
 
-if (closeYoutubeModal) {
-    closeYoutubeModal.addEventListener('click', () => {
-        if (youtubeSearchModal) youtubeSearchModal.classList.remove('active');
-        // Stop YouTube player when closing
-        if (youtubePlayerInstance) {
-            youtubePlayerInstance.stopVideo();
-        }
-    });
-}
-
-if (youtubeSearchModal) {
-    youtubeSearchModal.addEventListener('click', (e) => {
-        if (e.target === youtubeSearchModal) {
-            youtubeSearchModal.classList.remove('active');
-            if (youtubePlayerInstance) {
-                youtubePlayerInstance.stopVideo();
-            }
-        }
-    });
-}
-
-// YouTube search functionality
-if (youtubeSearchButton) {
-    youtubeSearchButton.addEventListener('click', () => {
-        performYouTubeSearch();
-    });
-}
-
-if (youtubeSearchInput) {
-    youtubeSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            performYouTubeSearch();
-        }
-    });
-}
-
-// Initialize YouTube API
-let youtubeAPIReady = false;
-function onYouTubeIframeAPIReady() {
-    youtubeAPIReady = true;
-}
-
-// Fallback if API loads before our code
-if (typeof YT !== 'undefined' && YT.Player) {
-    youtubeAPIReady = true;
-}
-
-function performYouTubeSearch() {
-    const query = youtubeSearchInput ? youtubeSearchInput.value.trim() : '';
-    if (!query) {
-        showNotification('Please enter a search term', 2000);
-        return;
-    }
-    
-    if (!youtubeResults) return;
-    
-    youtubeResults.innerHTML = '<p class="searching">Searching...</p>';
-    
-    // Since we can't directly search without API key, we'll create a search interface
-    // that allows users to paste YouTube video URLs or use a search helper
-    showYouTubeSearchHelper(query);
-}
-
-function showYouTubeSearchHelper(query) {
-    if (!youtubeResults) return;
-    
-    youtubeResults.innerHTML = `
-        <div class="youtube-search-helper">
-            <p><strong>Search YouTube for:</strong> "${query}"</p>
-            <p class="youtube-instructions">
-                <strong>Option 1:</strong> Go to <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(query)}" target="_blank">YouTube</a> and copy a video URL, then paste it below.
-            </p>
-            <div class="youtube-url-input">
-                <input type="text" id="youtubeUrlInput" placeholder="Paste YouTube video URL here (e.g., https://www.youtube.com/watch?v=...)" class="youtube-url-field">
-                <button id="loadYoutubeUrlBtn" class="load-youtube-btn">Load Video</button>
-            </div>
-            <p class="youtube-note">💡 Tip: Search on YouTube, then paste the video URL here to play the audio.</p>
-        </div>
-    `;
-    
-    const urlInput = document.getElementById('youtubeUrlInput');
-    const loadBtn = document.getElementById('loadYoutubeUrlBtn');
-    
-    if (loadBtn) {
-        loadBtn.addEventListener('click', () => {
-            const url = urlInput ? urlInput.value.trim() : '';
-            if (url) {
-                loadYouTubeVideo(url);
-            }
-        });
-    }
-    
-    if (urlInput) {
-        urlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const url = urlInput.value.trim();
-                if (url) {
-                    loadYouTubeVideo(url);
-                }
-            }
-        });
-    }
-}
-
-function loadYouTubeVideo(url) {
-    // Extract video ID from various YouTube URL formats
-    let videoId = null;
-    
-    // Standard format: https://www.youtube.com/watch?v=VIDEO_ID
-    const match1 = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-    if (match1) {
-        videoId = match1[1];
-    }
-    
-    // Short format: https://youtu.be/VIDEO_ID
-    if (!videoId) {
-        const match2 = url.match(/youtu\.be\/([^&\n?#]+)/);
-        if (match2) {
-            videoId = match2[1];
-        }
-    }
-    
-    // Embed format: https://www.youtube.com/embed/VIDEO_ID
-    if (!videoId) {
-        const match3 = url.match(/youtube\.com\/embed\/([^&\n?#]+)/);
-        if (match3) {
-            videoId = match3[1];
-        }
-    }
-    
-    if (!videoId) {
-        showNotification('Invalid YouTube URL. Please paste a valid YouTube video URL.', 3000);
-        return;
-    }
-    
-    playYouTubeVideo(videoId);
-}
-
-function playYouTubeVideo(videoId) {
-    if (!youtubePlayer) return;
-    
-    // Hide results, show player
-    if (youtubeResults) youtubeResults.style.display = 'none';
-    if (youtubePlayerContainer) youtubePlayerContainer.style.display = 'block';
-    
-    // Wait for YouTube API to be ready
-    const initPlayer = () => {
-        if (typeof YT === 'undefined' || !YT.Player) {
-            setTimeout(initPlayer, 100);
-            return;
-        }
-        
-        // Initialize or update YouTube player
-        if (!youtubePlayerInstance) {
-            youtubePlayerInstance = new YT.Player('youtubePlayer', {
-                height: '200',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    'autoplay': 1,
-                    'controls': 1,
-                    'modestbranding': 1,
-                    'rel': 0,
-                    'showinfo': 0
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        } else {
-            youtubePlayerInstance.loadVideoById(videoId);
-        }
-        
-        currentYoutubeVideoId = videoId;
-        
-        // Switch to YouTube playlist
-        if (playlistSelect) playlistSelect.value = 'youtube';
-        
-        // Get video title (would need API for this, but we'll show the video ID for now)
-        if (youtubeVideoTitle) {
-            youtubeVideoTitle.textContent = `Video ID: ${videoId}`;
-        }
-    };
-    
-    initPlayer();
-}
-
-function onPlayerReady(event) {
-    event.target.playVideo();
-    if (trackName) trackName.textContent = 'YouTube Audio';
-}
-
-function onPlayerStateChange(event) {
-    // Handle player state changes if needed
-    if (event.data === YT.PlayerState.PLAYING) {
-        if (playIcon) playIcon.textContent = '⏸';
-    } else if (event.data === YT.PlayerState.PAUSED) {
-        if (playIcon) playIcon.textContent = '▶';
-    }
-}
-
-// Handle YouTube playlist selection
-if (playlistSelect) {
-    playlistSelect.addEventListener('change', (e) => {
-        if (e.target.value === 'youtube') {
-            if (!currentYoutubeVideoId) {
-                if (youtubeSearchModal) youtubeSearchModal.classList.add('active');
-                showNotification('Search YouTube to play audio', 3000);
-            }
-        }
-    });
-}
 
 // ==================== START APPLICATION ====================
 window.addEventListener('load', () => {
     init();
     initChat();
     
-    // Check if YouTube API is already loaded
-    if (typeof YT !== 'undefined' && YT.Player) {
-        youtubeAPIReady = true;
-    }
 });

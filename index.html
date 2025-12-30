@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relaxing Study Space</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 Relaxing Study Space</h1>
+            <p class="subtitle">Focus • Relax • Achieve</p>
+        </header>
+
+        <main>
+            <div class="music-section">
+                <div class="music-controls">
+                    <button id="playPauseBtn" class="control-btn">
+                        <span id="playIcon">▶</span>
+                    </button>
+                    <div class="music-info">
+                        <p id="trackName">Relaxing Study Music</p>
+                        <div class="volume-control">
+                            <span>🔊</span>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                        </div>
+                    </div>
+                </div>
+                <audio id="backgroundMusic" loop preload="auto">
+                    <!-- Using a royalty-free music source -->
+                    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+                    <!-- Fallback: You can replace this with your own music file -->
+                    <source src="https://archive.org/download/relaxing-music/relaxing-music.mp3" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <h3>⏱️ Focus Timer</h3>
+                    <div class="timer-display" id="timerDisplay">25:00</div>
+                    <div class="timer-controls">
+                        <button class="timer-btn" id="startTimer">Start</button>
+                        <button class="timer-btn" id="resetTimer">Reset</button>
+                    </div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-minutes="25">25 min</button>
+                        <button class="preset-btn" data-minutes="45">45 min</button>
+                        <button class="preset-btn" data-minutes="60">60 min</button>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🎵 Ambient Sounds</h3>
+                    <div class="sound-options">
+                        <button class="sound-btn" data-sound="rain">🌧️ Rain</button>
+                        <button class="sound-btn" data-sound="forest">🌲 Forest</button>
+                        <button class="sound-btn" data-sound="ocean">🌊 Ocean</button>
+                        <button class="sound-btn" data-sound="fireplace">🔥 Fireplace</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Take breaks, stay hydrated, and enjoy your study session ✨</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
